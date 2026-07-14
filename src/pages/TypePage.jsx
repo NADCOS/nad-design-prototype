@@ -23,14 +23,21 @@ export default function TypePage() {
   const remoteLoading = isSupabaseConfigured && state.projectTypesStatus === 'loading' && state.projectTypesRemote.length === 0;
   const remoteError = isSupabaseConfigured && state.projectTypesStatus === 'error' && state.projectTypesRemote.length === 0;
 
+  function localFallbackImageFor(name) {
+    const match = PROJECT_TYPES.find((pt) => pt.en.toLowerCase() === (name || '').toLowerCase());
+    return match ? (PREFILL_PROJECT_IMAGES[match.key] || '') : '';
+  }
+
   // Prefer Supabase-managed rows once loaded; fall back to the built-in
   // catalogue if Supabase isn't configured, still loading, or came back empty.
+  // A Supabase row with no uploaded image yet (or a broken URL) still shows
+  // the matching built-in placeholder photo instead of the striped empty state.
   const cards = remoteReady
     ? state.projectTypesRemote.map((row) => ({
         key: row.id,
         name: row.name,
         desc: row.description || '',
-        imageUrl: brokenImageIds[row.id] ? '' : row.imageUrl,
+        imageUrl: (!brokenImageIds[row.id] && row.imageUrl) ? row.imageUrl : localFallbackImageFor(row.name),
         remoteRow: row,
       }))
     : PROJECT_TYPES.map((pt) => ({ key: pt.key, name: pt[lang], desc: pt[lang + 'Desc'], imageUrl: PREFILL_PROJECT_IMAGES[pt.key] || '', remoteRow: null }));
