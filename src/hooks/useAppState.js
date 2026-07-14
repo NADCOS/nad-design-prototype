@@ -11,6 +11,8 @@ import { getLevelRange, computeCost, computeWarnings } from '../utils/pricing.js
 import { generateDesign as requestNanoBananaDesign, getRemainingGenerations } from '../services/nanoBananaClient.js';
 import { buildStructuredPrompt } from '../utils/promptBuilder.js';
 import { AI_GENERATION_CONFIG } from '../config/aiGeneration.js';
+import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
+import * as projectTypesService from '../services/projectTypesService.js';
 
 const initialSelections = {
   projectType: null,
@@ -70,6 +72,8 @@ export function AppStateProvider({ children }) {
     generationMood: 'daylight', generationQuality: 'photorealistic', generationStatus: 'idle', generationVersion: 0, sliderPos: 50,
     promptDraft: null, generatedImageUrl: null, generationError: null,
     generationAspectRatio: AI_GENERATION_CONFIG.defaultAspectRatio, generationImageSize: AI_GENERATION_CONFIG.defaultImageSize, allowFullRedesign: false,
+    projectTypesRemote: [], projectTypesStatus: 'idle', projectTypesError: null,
+    editingProjectType: null, projectTypeSaving: false, projectTypeSaveError: null, projectTypeSaveSuccess: false,
   });
   const toastTimer = useRef(null);
 
@@ -148,6 +152,9 @@ export function AppStateProvider({ children }) {
     setState((s) => {
       if (s.loginPasscode === 'Drive@2424') {
         try { localStorage.setItem('nad_role', 'admin'); } catch (e) {}
+        if (isSupabaseConfigured) {
+          supabase.auth.signInAnonymously().catch(() => {});
+        }
         setTimeout(() => navigate(s.loginIntent ? '/design/' + s.loginIntent : '/admin'), 0);
         return { ...s, role: 'admin', loginError: '', loginPasscode: '', loginIntent: null };
       }
@@ -157,6 +164,9 @@ export function AppStateProvider({ children }) {
 
   const logout = useCallback(() => {
     try { localStorage.removeItem('nad_role'); } catch (e) {}
+    if (isSupabaseConfigured) {
+      supabase.auth.signOut().catch(() => {});
+    }
     patch({ role: null });
     navigate('/');
   }, [patch, navigate]);
@@ -367,6 +377,45 @@ export function AppStateProvider({ children }) {
 
   const setSliderPos = useCallback((n) => patch({ sliderPos: n }), [patch]);
 
+  const loadProjectTypes = useCallback(async () => {
+    patch({ projectTypesStatus: 'loading', projectTypesError: null });
+    const result = await projectTypesService.getProjectTypes();
+    if (result.ok) {
+      patch({ projectTypesRemote: result.data, projectTypesStatus: 'loaded', projectTypesError: null });
+    } else {
+      patch({ projectTypesStatus: 'error', projectTypesError: result.error || 'Could not load project types.' });
+    }
+  }, [patch]);
+
+  const openProjectTypeEditor = useCallback((row) => patch({ editingProjectType: row, projectTypeSaveError: null, projectTypeSaveSuccess: false }), [patch]);
+  const closeProjectTypeEditor = useCallback(() => {
+    if (state.projectTypeSaving) return;
+    patch({ editingProjectType: null, projectTypeSaveError: null, projectTypeSaveSuccess: false });
+  }, [patch, state.projectTypeSaving]);
+
+  const saveProjectTypeEditFn = useCallback(async (id, fields, imageFile) => {
+    patch({ projectTypeSaving: true, projectTypeSaveError: null, projectTypeSaveSuccess: false });
+
+    if (isSupabaseConfigured) {
+      const { data: { session } = {} } = await supabase.auth.getSession();
+      if (!session) {
+        patch({ projectTypeSaving: false, projectTypeSaveError: 'You do not have permission to modify this content.' });
+        return { ok: false };
+      }
+    }
+
+    const result = await projectTypesService.saveProjectTypeEdit(id, fields, imageFile);
+    if (!result.ok) {
+      patch({ projectTypeSaving: false, projectTypeSaveError: result.error || 'Something went wrong saving your changes. Please try again.' });
+      return result;
+    }
+
+    await loadProjectTypes();
+    patch({ projectTypeSaving: false, projectTypeSaveSuccess: true });
+    setTimeout(() => patch((s) => (s.editingProjectType ? { editingProjectType: null, projectTypeSaveSuccess: false } : {})), 900);
+    return result;
+  }, [patch, loadProjectTypes]);
+
   const value = {
     state, patch, showToast,
     toggleTheme, handleAdminImageChange,
@@ -386,6 +435,7 @@ export function AppStateProvider({ children }) {
     setAspectRatio, setImageSize, toggleAllowFullRedesign,
     generateDesign, regenerate, resetGeneration, downloadPlaceholder, downloadGeneratedImage,
     saveProject, requestConsult, buildWhatsAppLink, setSliderPos,
+    loadProjectTypes, openProjectTypeEditor, closeProjectTypeEditor, saveProjectTypeEdit: saveProjectTypeEditFn,
     computeCost: () => computeCost(state.selections, state.priceOverrides),
     computeWarnings: () => computeWarnings(state.selections, state.lang),
     getRemainingGenerations,
