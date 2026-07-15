@@ -8,7 +8,7 @@ import ProjectTypeEditModal from '../components/ProjectTypeEditModal.jsx';
 import Hoverable from '../components/Hoverable.jsx';
 
 export default function TypePage() {
-  const { state, selectProjectType, setCustomType, nextFromType, handleAdminImageChange, loadProjectTypes, openProjectTypeEditor } = useAppState();
+  const { state, selectProjectType, setCustomType, nextFromType, handleAdminImageChange, loadProjectTypes, openProjectTypeEditor, quickSaveProjectTypeImage } = useAppState();
   const lang = state.lang;
   const T = STRINGS[lang];
   const isAdmin = state.role === 'admin';
@@ -57,6 +57,12 @@ export default function TypePage() {
       <h1 style={{ fontFamily: 'var(--head-font)', fontSize: 34, color: 'var(--text)', margin: '0 0 8px', fontWeight: 500 }}>{T.type.title}</h1>
       <p style={{ fontSize: 15, color: 'var(--text-2)', margin: '0 0 30px' }}>{T.type.sub}</p>
 
+      {isAdmin && (
+        <div style={{ background: 'oklch(94% 0.035 75)', border: '1px solid oklch(78% 0.06 68)', borderRadius: 12, padding: '13px 18px', marginBottom: 20, fontSize: 13, lineHeight: 1.5, color: 'oklch(36% 0.05 60)' }}>
+          <strong style={{ fontWeight: 700 }}>Admin Mode.</strong> Use the camera icon on a card to instantly swap its photo, or "{T.common.edit}" to update its name, description, order, and visibility. Every change saves straight to the live site — guests never see these controls.
+        </div>
+      )}
+
       {remoteError && (
         <div role="alert" style={{ background: 'oklch(95% 0.03 30)', border: '1px solid oklch(80% 0.06 30)', borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 13.5, color: 'oklch(35% 0.1 30)' }}>{state.projectTypesError || 'Could not load project types.'}</span>
@@ -89,6 +95,8 @@ export default function TypePage() {
                 editLabel={T.common.edit}
                 onSelect={() => handleSelect(card)}
                 onEditClick={card.remoteRow ? () => openProjectTypeEditor(card.remoteRow) : undefined}
+                onQuickImageUpload={card.remoteRow ? (file) => quickSaveProjectTypeImage(card.remoteRow, file) : undefined}
+                saving={state.projectTypeSaving}
               />
             ))}
       </div>
