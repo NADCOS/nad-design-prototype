@@ -67,8 +67,9 @@ export function AppStateProvider({ children }) {
       { id: 2, name: 'Lama Al-Fahad', email: 'lama.fahad@example.com', projects: 1, lastActive: '2026-07-05' },
       { id: 3, name: 'Khalid Al-Dossari', email: 'khalid.d@example.com', projects: 3, lastActive: '2026-07-01' },
     ],
-    adminRegistrations: [],
+     adminRegistrations: [],
     guestEmail: '', guestPhone: '', guestFormError: '', loginIntent: null,
+    guestPanelMode: 'signup', guestLoginIdentifier: '', guestLoginError: '',
     generationMood: 'daylight', generationQuality: 'photorealistic', generationStatus: 'idle', generationVersion: 0, sliderPos: 50,
     promptDraft: null, generatedImageUrl: null, generationError: null,
     generationAspectRatio: AI_GENERATION_CONFIG.defaultAspectRatio, generationImageSize: AI_GENERATION_CONFIG.defaultImageSize, allowFullRedesign: false,
@@ -116,6 +117,35 @@ export function AppStateProvider({ children }) {
   const setLoginPasscode = useCallback((e) => patch({ loginPasscode: e.target.value, loginError: '' }), [patch]);
   const setGuestEmail = useCallback((e) => patch({ guestEmail: e.target.value, guestFormError: '' }), [patch]);
   const setGuestPhone = useCallback((e) => patch({ guestPhone: e.target.value, guestFormError: '' }), [patch]);
+  const setGuestPanelMode = useCallback((mode) => patch({ guestPanelMode: mode, guestFormError: '', guestLoginError: '' }), [patch]);
+  const setGuestLoginIdentifier = useCallback((e) => patch({ guestLoginIdentifier: e.target.value, guestLoginError: '' }), [patch]);
+
+  // Returning guests: look up their email/phone among existing registrations
+  // (signed up before, verified or not) and sign them straight in — no need
+  // to fill out the registration form again.
+  const loginAsGuest = useCallback(() => {
+    setState((s) => {
+      const identifier = s.guestLoginIdentifier.trim().toLowerCase();
+      if (!identifier) {
+        return { ...s, guestLoginError: s.lang === 'ar' ? STRINGS.ar.login.guestFormError : STRINGS.en.login.guestFormError };
+      }
+      const match = s.adminRegistrations.find((r) => (r.email && r.email.toLowerCase() === identifier) || (r.phone && r.phone.replace(/\s+/g, '') === identifier.replace(/\s+/g, '')));
+      if (!match) {
+        return { ...s, guestLoginError: s.lang === 'ar' ? STRINGS.ar.login.guestLoginNotFound : STRINGS.en.login.guestLoginNotFound };
+      }
+      try { localStorage.setItem('nad_role', 'guest'); } catch (e) {}
+      const idx = STEP_KEYS.indexOf(s.loginIntent);
+      setTimeout(() => {
+        showToast(s.lang === 'ar' ? STRINGS.ar.login.guestWelcomeBack : STRINGS.en.login.guestWelcomeBack);
+        navigate(s.loginIntent ? '/design/' + s.loginIntent : '/');
+      }, 0);
+      return {
+        ...s, role: 'guest',
+        maxStepIndex: idx >= 0 ? Math.max(s.maxStepIndex, idx) : s.maxStepIndex,
+        loginIntent: null, guestLoginIdentifier: '', guestLoginError: '',
+      };
+    });
+  }, [navigate, showToast]);
 
   const registerGuest = useCallback(() => {
     setState((s) => {
@@ -453,7 +483,8 @@ export function AppStateProvider({ children }) {
   const value = {
     state, patch, showToast,
     toggleTheme, handleAdminImageChange,
-    goToLogin, setLoginPasscode, setGuestEmail, setGuestPhone, registerGuest, loginAsAdmin, logout,
+     goToLogin, setLoginPasscode, setGuestEmail, setGuestPhone, registerGuest, loginAsAdmin, logout,
+    setGuestPanelMode, setGuestLoginIdentifier, loginAsGuest,
     goToAdmin, setAdminTab, setRegistrationStatus,
     getLevelRangeFor, setPriceOverride,
     setNewSupplierName, addSupplier, toggleSupplierStatus, removeSupplier,
