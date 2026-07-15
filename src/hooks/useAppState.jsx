@@ -393,6 +393,40 @@ export function AppStateProvider({ children }) {
     patch({ editingProjectType: null, projectTypeSaveError: null, projectTypeSaveSuccess: false });
   }, [patch, state.projectTypeSaving]);
 
+  // Quick admin action from the card grid itself: swap only the image and
+  // save immediately (no name/description/order editing) — distinct from
+  // the full edit modal, so admins get a one-click "change photo, publish
+  // now" path right on "Start Your Design".
+  const quickSaveProjectTypeImage = useCallback(async (row, imageFile) => {
+    if (!row || !imageFile) return { ok: false };
+    patch({ projectTypeSaving: true, projectTypeSaveError: null });
+
+    if (isSupabaseConfigured) {
+      const { data: { session } = {} } = await supabase.auth.getSession();
+      if (!session) {
+        patch({ projectTypeSaving: false, projectTypeSaveError: 'You do not have permission to modify this content.' });
+        showToast(state.lang === 'ar' ? 'ليست لديك صلاحية لتعديل هذا المحتوى.' : 'You do not have permission to modify this content.');
+        return { ok: false };
+      }
+    }
+
+    const result = await projectTypesService.saveProjectTypeEdit(
+      row.id,
+      { name: row.name, description: row.description, sort_order: row.sort_order, is_active: row.is_active },
+      imageFile
+    );
+    if (!result.ok) {
+      patch({ projectTypeSaving: false, projectTypeSaveError: result.error || null });
+      showToast(result.error || (state.lang === 'ar' ? 'تعذّر حفظ الصورة.' : 'Could not save the image.'));
+      return result;
+    }
+
+    await loadProjectTypes();
+    patch({ projectTypeSaving: false });
+    showToast(state.lang === 'ar' ? 'تم تحديث الصورة ونشرها على الموقع.' : 'Image updated — now live on the site.');
+    return result;
+  }, [patch, loadProjectTypes, showToast, state.lang]);
+
   const saveProjectTypeEditFn = useCallback(async (id, fields, imageFile) => {
     patch({ projectTypeSaving: true, projectTypeSaveError: null, projectTypeSaveSuccess: false });
 
@@ -435,7 +469,7 @@ export function AppStateProvider({ children }) {
     setAspectRatio, setImageSize, toggleAllowFullRedesign,
     generateDesign, regenerate, resetGeneration, downloadPlaceholder, downloadGeneratedImage,
     saveProject, requestConsult, buildWhatsAppLink, setSliderPos,
-    loadProjectTypes, openProjectTypeEditor, closeProjectTypeEditor, saveProjectTypeEdit: saveProjectTypeEditFn,
+    loadProjectTypes, openProjectTypeEditor, closeProjectTypeEditor, saveProjectTypeEdit: saveProjectTypeEditFn, quickSaveProjectTypeImage,
     computeCost: () => computeCost(state.selections, state.priceOverrides),
     computeWarnings: () => computeWarnings(state.selections, state.lang),
     getRemainingGenerations,
