@@ -17,10 +17,10 @@ export default function Header({ headFont }) {
   const themeToggleLabel = state.theme === 'dark' ? T.nav.lightMode : T.nav.darkMode;
 
   return (
-    <header style={{ position: 'sticky', top: 0, zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, padding: '14px 28px', background: 'var(--nav-bg)', backdropFilter: 'blur(10px)', borderBottom: '1px solid var(--border)' }}>
+    <header className="nad-header" style={{ position: 'sticky', top: 0, zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', padding: '14px 28px', background: 'var(--nav-bg)', backdropFilter: 'blur(10px)', borderBottom: '1px solid var(--border)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => navigate('/')} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && navigate('/')}>
         <img src="/assets/nad-logo.jpg" alt="NAD Design logo" style={{ width: 40, height: 40, borderRadius: 0, objectFit: 'cover' }} />
-        <span style={{ fontFamily: headFont, fontSize: 19, letterSpacing: '0.04em', color: 'var(--text)' }}>{T.brand}</span>
+        <span className="nad-header-brand-text" style={{ fontFamily: headFont, fontSize: 19, letterSpacing: '0.04em', color: 'var(--text)' }}>{T.brand}</span>
       </div>
       <nav style={{ display: 'flex', alignItems: 'center', gap: 26, flexWrap: 'wrap' }} aria-label="Main navigation">
         <span style={{ fontSize: 14, color: 'var(--text-2)', cursor: 'pointer' }} onClick={() => navigate('/')} role="link" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && navigate('/')}>{T.nav.home}</span>

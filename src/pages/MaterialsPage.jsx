@@ -33,7 +33,7 @@ export default function MaterialsPage() {
           return <div key={cat.key} onClick={() => selectTab(cat.key)} style={sx(tabStyle)} role="tab" aria-selected={active} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && selectTab(cat.key)}>{cat[lang]}</div>;
         })}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 14 }}>
+      <div className="nad-grid-5" style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 14 }}>
         {activeCat.items.map((item) => {
           const chosen = state.selections.materials[activeCat.key] && state.selections.materials[activeCat.key].en === item[0];
           const slotId = materialSlotId(activeCat.key, item[0]);

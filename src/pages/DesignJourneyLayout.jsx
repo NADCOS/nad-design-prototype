@@ -23,7 +23,7 @@ export default function DesignJourneyLayout({ step, children }) {
   if (!state.role || idx > state.maxStepIndex) return null;
 
   return (
-    <div data-screen-label="Journey" style={{ maxWidth: 1240, margin: '0 auto', padding: '0 28px 60px' }}>
+    <div data-screen-label="Journey" className="nad-page" style={{ maxWidth: 1240, margin: '0 auto', padding: '0 28px 60px' }}>
       <ProjectProgress current={step} />
       {children}
       <MaterialPreviewModal />

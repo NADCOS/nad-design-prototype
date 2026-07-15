@@ -41,7 +41,7 @@ export default function LevelPage({ headFont }) {
           </div>
         </div>
       )}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
+      <div className="nad-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
         {DESIGN_LEVELS.map((lv) => {
           const selected = state.selections.designLevel && state.selections.designLevel.key === lv.key;
           const range = getLevelRangeFor(lv.key);

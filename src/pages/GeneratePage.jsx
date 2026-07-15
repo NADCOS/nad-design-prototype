@@ -39,7 +39,7 @@ export default function GeneratePage() {
     <section data-screen-label="AI Design Generator">
       <h1 style={{ fontFamily: 'var(--head-font)', fontSize: 34, color: 'var(--text)', margin: '0 0 8px', fontWeight: 500 }}>{T.generate.title}</h1>
       <p style={{ fontSize: 15, color: 'var(--text-2)', margin: '0 0 28px', maxWidth: 640 }}>{T.generate.sub}</p>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }}>
+      <div className="nad-grid-split" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, alignItems: 'start' }}>
         <div>
           <PromptPreview />
           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-2)', marginBottom: 8 }}>{T.generate.lighting}</div>
@@ -74,7 +74,7 @@ export default function GeneratePage() {
           >
             {isGenLoading ? T.generate.generatingBtn : T.generate.generateBtn}
           </Hoverable>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 14 }}>
+          <div className="nad-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 14 }}>
             <Hoverable as="button" type="button" style={ghostBtnStyle} hoverStyle={ghostBtnHoverStyle} onClick={() => navigate('/design/materials')}>{T.generate.changeMaterials}</Hoverable>
             <Hoverable as="button" type="button" style={ghostBtnStyle} hoverStyle={ghostBtnHoverStyle} onClick={() => navigate('/design/level')}>{T.generate.changeLevel}</Hoverable>
             <Hoverable as="button" type="button" style={ghostBtnStyle} hoverStyle={ghostBtnHoverStyle} onClick={() => navigate('/design/furniture')}>{T.generate.changeFurniture}</Hoverable>
@@ -117,7 +117,7 @@ export default function GeneratePage() {
                 onSliderChange={(e) => setSliderPos(Number(e.target.value))}
               />
               <div style={{ fontSize: 11.5, color: 'var(--text-2)', textAlign: 'center', marginTop: 6, fontStyle: 'italic' }}>{T.generate.conceptual}</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 16 }}>
+              <div className="nad-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 16 }}>
                 <Hoverable as="button" type="button" style={ghostBtnStyle} hoverStyle={ghostBtnHoverStyle} onClick={regenerate}>{T.generate.regenerate}</Hoverable>
                 <Hoverable as="button" type="button" style={ghostBtnStyle} hoverStyle={ghostBtnHoverStyle} onClick={downloadGeneratedImage}>{T.generate.download}</Hoverable>
                 <Hoverable as="button" type="button" style={ghostBtnStyle} hoverStyle={ghostBtnHoverStyle} onClick={saveProject}>{T.generate.save}</Hoverable>

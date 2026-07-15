@@ -12,8 +12,8 @@ export default function HomePage({ headFont }) {
   const journeyList = T.steps.map((label, i) => ({ num: (i + 1 < 10 ? '0' : '') + (i + 1), label }));
 
   return (
-    <main data-screen-label="Home" style={{ maxWidth: 1240, margin: '0 auto', padding: '0 28px' }}>
-      <section style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 56, alignItems: 'center', padding: '88px 0 64px' }}>
+    <main data-screen-label="Home" className="nad-page" style={{ maxWidth: 1240, margin: '0 auto', padding: '0 28px' }}>
+      <section className="nad-grid-hero" style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 56, alignItems: 'center', padding: '88px 0 64px' }}>
         <div style={{ animation: 'nad-fade-up 0.6s ease both' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'oklch(46% 0.09 60)', fontWeight: 600, marginBottom: 22 }}>
             <span style={{ width: 22, height: 1, background: 'oklch(46% 0.09 60)' }} aria-hidden="true" />{T.home.kicker}
@@ -25,7 +25,7 @@ export default function HomePage({ headFont }) {
             <Hoverable as="button" type="button" style="font-size:14.5px;font-weight:600;color:var(--text);background:transparent;border:1px solid var(--border);padding:15px 28px;border-radius:100px;cursor:pointer;transition:transform .18s ease,background .18s ease;" hoverStyle="transform:translateY(-2px);background:var(--border);" onClick={goToLevels}>{T.home.ctaSecondary}</Hoverable>
           </div>
         </div>
-        <div style={{ position: 'relative', aspectRatio: '4/5', borderRadius: 18, overflow: 'hidden', background: 'url("/assets/hero.jpeg") center / cover no-repeat', display: 'flex', alignItems: 'flex-end', padding: 22 }} role="img" aria-label="AI-generated villa majlis, luxury level">
+        <div className="nad-hero-image" style={{ position: 'relative', aspectRatio: '4/5', borderRadius: 18, overflow: 'hidden', background: 'url("/assets/hero.jpeg") center / cover no-repeat', display: 'flex', alignItems: 'flex-end', padding: 22 }} role="img" aria-label="AI-generated villa majlis, luxury level">
           <span style={{ fontFamily: 'ui-monospace,monospace', fontSize: 12, color: 'var(--text)', background: 'oklch(97% 0.01 80 / 0.85)', padding: '8px 12px', borderRadius: 8 }}>hero — AI-generated villa majlis, luxury level</span>
         </div>
       </section>
@@ -50,7 +50,7 @@ export default function HomePage({ headFont }) {
           </div>
           <Hoverable as="button" type="button" style="font-size:13.5px;font-weight:600;color:var(--text);background:transparent;border:1px solid var(--border);padding:11px 20px;border-radius:100px;cursor:pointer;white-space:nowrap;transition:transform .18s ease,background .18s ease;" hoverStyle="transform:translateY(-2px);background:var(--border);" onClick={goToLevels}>{T.home.ctaSecondary}</Hoverable>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
+        <div className="nad-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
           {DESIGN_LEVELS.map((lv) => {
             const range = getLevelRangeFor(lv.key);
             const priceLabel = T.common.from + ' ' + fmtSar(range.priceMin, lang) + ' ' + T.common.perSqm;

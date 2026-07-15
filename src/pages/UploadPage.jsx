@@ -35,7 +35,7 @@ export default function UploadPage() {
         <div style={{ fontSize: 12.5, color: 'var(--text-2)' }}>{T.upload.dropSub}</div>
       </label>
       {uploads.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 10, marginBottom: 30 }}>
+        <div className="nad-grid-6" style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 10, marginBottom: 30 }}>
           {uploads.map((up, i) => (
             <div key={i} style={{ position: 'relative', aspectRatio: '1/1', borderRadius: 10, overflow: 'hidden', background: 'oklch(90% 0.02 75)' }}>
               {up.isImage && up.dataUrl ? (
@@ -48,7 +48,7 @@ export default function UploadPage() {
           ))}
         </div>
       )}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16, marginBottom: 30 }}>
+      <div className="nad-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16, marginBottom: 30 }}>
         {fields.map((f) => (
           <div key={f.key}>
             <label htmlFor={'nad-pi-' + f.key} style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text)', display: 'block', marginBottom: 6 }}>{f.label}</label>

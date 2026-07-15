@@ -5,3 +5,27 @@ body, html { margin: 0; -webkit-font-smoothing: antialiased; }
 input, textarea, button, select { font-family: inherit; }
 @keyframes nad-spin { to { transform: rotate(360deg); } }
 @keyframes nad-fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Responsive layout overrides — tablet & phone (added for mobile pass) */
+body { overflow-x: hidden; }
+@media (max-width: 900px) {
+  .nad-page { padding-left: 18px !important; padding-right: 18px !important; }
+  .nad-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+  .nad-grid-5 { grid-template-columns: repeat(3, 1fr) !important; }
+  .nad-grid-6 { grid-template-columns: repeat(4, 1fr) !important; }
+  .nad-grid-7 { grid-template-columns: repeat(4, 1fr) !important; }
+  .nad-grid-split { grid-template-columns: 1fr !important; }
+  .nad-grid-hero { grid-template-columns: 1fr !important; padding-top: 48px !important; padding-bottom: 40px !important; gap: 32px !important; }
+  .nad-hero-image { aspect-ratio: 16/10 !important; }
+}
+@media (max-width: 600px) {
+  .nad-page { padding-left: 14px !important; padding-right: 14px !important; }
+  .nad-grid-4 { grid-template-columns: 1fr !important; }
+  .nad-grid-5 { grid-template-columns: repeat(2, 1fr) !important; }
+  .nad-grid-6 { grid-template-columns: repeat(3, 1fr) !important; }
+  .nad-grid-7 { grid-template-columns: repeat(3, 1fr) !important; }
+  .nad-grid-2 { grid-template-columns: 1fr !important; }
+  .nad-header { padding: 12px 16px !important; gap: 10px !important; }
+  .nad-header-brand-text { display: none !important; }
+  h1 { font-size: clamp(22px, 7vw, 30px) !important; }
+}

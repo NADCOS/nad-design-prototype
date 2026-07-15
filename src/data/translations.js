@@ -33,7 +33,7 @@ export const STRINGS = {
       guestOr: 'or provide at least one', guestFormError: 'Please enter an email or phone number to continue.',
       guestBtn: 'Register & Continue', guestNotified: 'Registration submitted — the NAD Design admin team has been notified for verification.',
       loggedInAs: 'Logged in as', switchAccount: 'Switch account',
-       guestSignupTab: 'Sign Up', guestLoginTab: 'Log In',
+      guestSignupTab: 'Sign Up', guestLoginTab: 'Log In',
       guestLoginDesc: 'Already registered? Log in with the email or phone you signed up with — no need to register again.',
       guestLoginIdentifierLabel: 'Email or phone number', guestLoginIdentifierPlaceholder: 'you@example.com or +966 5x xxx xxxx',
       guestLoginBtn: 'Log In', guestLoginNotFound: 'We couldn\u2019t find an account with that email or phone. Try Sign Up instead.',

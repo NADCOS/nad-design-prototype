@@ -21,7 +21,7 @@ export default function StyleSelector({ headFont }) {
   return (
     <>
       <div style={{ fontSize: 12.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'oklch(46% 0.09 60)', marginBottom: 12 }}>{T.style.primary}</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 10, marginBottom: 30 }}>
+      <div className="nad-grid-5" style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 10, marginBottom: 30 }}>
         {STYLES.map((st) => {
           const active = primaryKey === st.key;
           const cardStyle = 'padding:14px 10px;border-radius:12px;text-align:center;cursor:pointer;font-size:13.5px;font-weight:600;background:' + (active ? 'var(--btn-bg)' : 'var(--surface)') + ';color:' + (active ? 'var(--btn-text)' : 'oklch(30% 0.02 55)') + ';border:1px solid ' + (active ? 'var(--btn-bg)' : 'var(--border)') + ';';
@@ -31,7 +31,7 @@ export default function StyleSelector({ headFont }) {
       {hasPrimaryStyle && (
         <>
           <div style={{ fontSize: 12.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-2)', marginBottom: 12 }}>{T.style.secondary}</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 8, marginBottom: 30 }}>
+          <div className="nad-grid-7" style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 8, marginBottom: 30 }}>
             {STYLES.map((st) => {
               const active = secondaryKey === st.key;
               const isPrimary = primaryKey === st.key;

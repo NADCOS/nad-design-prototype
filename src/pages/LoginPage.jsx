@@ -26,7 +26,7 @@ export default function LoginPage() {
       <button type="button" onClick={() => navigate('/')} style={{ fontSize: 13, color: 'var(--text-2)', cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}>{T.login.back}</button>
       <h1 style={{ fontFamily: 'var(--head-font)', fontSize: 32, color: 'var(--text)', margin: '14px 0 6px', fontWeight: 500 }}>{T.login.title}</h1>
       <p style={{ fontSize: 15, color: 'var(--text-2)', margin: '0 0 34px' }}>{T.login.sub}</p>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div className="nad-grid-split" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: 28 }}>
           <div style={{ fontFamily: 'var(--head-font)', fontSize: 19, color: 'var(--text)', marginBottom: 8 }}>{T.login.adminTitle}</div>
           <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.5, margin: '0 0 18px' }}>{T.login.adminDesc}</p>
