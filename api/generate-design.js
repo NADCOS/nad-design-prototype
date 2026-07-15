@@ -3,8 +3,13 @@
 // (Gemini 3.1 Flash Image) via api/services/nanoBanana.js, and returns a plain
 // JSON result. GEMINI_API_KEY never leaves this file.
 import { generateWithNanoBanana } from './services/nanoBanana.js';
+import { getSupabaseAdmin } from './services/supabaseAdmin.js';
 
 const MAX_PROMPT_LENGTH = 6000;
+// Per-guest daily cap, enforced server-side against the generation_logs table
+// so it can't be bypassed by refreshing the page or clearing sessionStorage
+// (unlike the client-side per-session counter in nanoBananaClient.js).
+const DAILY_LIMIT_PER_GUEST = Number(process.env.GENERATION_DAILY_LIMIT) || 5;
 const MAX_UPLOAD_BYTES = 7 * 1024 * 1024; // 7MB
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const VALID_ASPECT_RATIOS = ['16:9', '4:3', '1:1', '9:16', '3:2'];
@@ -41,7 +46,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { prompt, imageBase64, imageMimeType, aspectRatio, imageSize } = payload;
+  const { prompt, imageBase64, imageMimeType, aspectRatio, imageSize, guestIdentifier } = payload;
 
   // ---- validation ----
   if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
@@ -75,6 +80,28 @@ export default async function handler(req, res) {
     }
   }
 
+  // ---- per-guest daily cap (admins send no guestIdentifier and are unlimited) ----
+  const identifier = typeof guestIdentifier === 'string' ? guestIdentifier.trim().toLowerCase() : '';
+  const supabaseAdmin = identifier ? getSupabaseAdmin() : null;
+  if (identifier && supabaseAdmin) {
+    try {
+      const since = new Date();
+      since.setUTCHours(0, 0, 0, 0);
+      const { count, error: countError } = await supabaseAdmin
+        .from('generation_logs')
+        .select('id', { count: 'exact', head: true })
+        .eq('identifier', identifier)
+        .gte('created_at', since.toISOString());
+      if (!countError && typeof count === 'number' && count >= DAILY_LIMIT_PER_GUEST) {
+        res.status(429).json({ success: false, error: `You\u2019ve reached today\u2019s design generation limit (${DAILY_LIMIT_PER_GUEST}). Please try again tomorrow or contact NAD Design for more.` });
+        return;
+      }
+    } catch (e) {
+      // Fail open — don't block generation if the quota check itself errors.
+      console.error('[generate-design] quota check failed:', e);
+    }
+  }
+
   // ---- generate ----
   try {
     const result = await generateWithNanoBanana({
@@ -84,6 +111,11 @@ export default async function handler(req, res) {
       aspectRatio: finalAspectRatio,
       imageSize: finalImageSize,
     });
+    if (identifier && supabaseAdmin) {
+      supabaseAdmin.from('generation_logs').insert({ identifier }).then(({ error: insertError }) => {
+        if (insertError) console.error('[generate-design] failed to log generation:', insertError);
+      });
+    }
     res.status(200).json({
       success: true,
       image: result.imageDataUrl,

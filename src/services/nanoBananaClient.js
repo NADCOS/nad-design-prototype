@@ -34,9 +34,10 @@ function mapStatusToMessage(status) {
  * @param {string} [args.aspectRatio] - e.g. "16:9"
  * @param {string} [args.imageSize] - "1K" | "2K"
  * @param {string} [args.projectId]
+ * @param {string} [args.guestIdentifier] - logged-in guest's email/phone, for the server-side daily cap (omit for admins)
  * @returns {Promise<{ success: boolean, image?: string, interactionId?: string, error?: string }>}
  */
-export async function generateDesign({ prompt, imageDataUrl, aspectRatio, imageSize, projectId }) {
+export async function generateDesign({ prompt, imageDataUrl, aspectRatio, imageSize, projectId, guestIdentifier }) {
   if (activeRequest) {
     return { success: false, error: 'A design is already being generated. Please wait for it to finish.' };
   }
@@ -64,6 +65,7 @@ export async function generateDesign({ prompt, imageDataUrl, aspectRatio, imageS
     imageSize: imageSize || AI_GENERATION_CONFIG.defaultImageSize,
     projectId: projectId || null,
   };
+  if (guestIdentifier) body.guestIdentifier = guestIdentifier;
   if (imageDataUrl) {
     const mime = extractMimeType(imageDataUrl, 'image/jpeg');
     if (!AI_GENERATION_CONFIG.allowedImageMimeTypes.includes(mime)) {

@@ -70,6 +70,7 @@ export function AppStateProvider({ children }) {
      adminRegistrations: [],
     guestEmail: '', guestPhone: '', guestFormError: '', loginIntent: null,
     guestPanelMode: 'signup', guestLoginIdentifier: '', guestLoginError: '',
+    currentGuestIdentifier: null,
     generationMood: 'daylight', generationQuality: 'photorealistic', generationStatus: 'idle', generationVersion: 0, sliderPos: 50,
     promptDraft: null, generatedImageUrl: null, generationError: null,
     generationAspectRatio: AI_GENERATION_CONFIG.defaultAspectRatio, generationImageSize: AI_GENERATION_CONFIG.defaultImageSize, allowFullRedesign: false,
@@ -81,7 +82,8 @@ export function AppStateProvider({ children }) {
   const patch = useCallback((updater) => setState((s) => ({ ...s, ...(typeof updater === 'function' ? updater(s) : updater) })), []);
 
   useEffect(() => {
-    try { const saved = localStorage.getItem('nad_role'); if (saved === 'admin' || saved === 'guest') patch({ role: saved }); } catch (e) {}
+     try { const saved = localStorage.getItem('nad_role'); if (saved === 'admin' || saved === 'guest') patch({ role: saved }); } catch (e) {}
+    try { const savedIdentifier = localStorage.getItem('nad_guest_identifier'); if (savedIdentifier) patch({ currentGuestIdentifier: savedIdentifier }); } catch (e) {}
     try { const savedImages = JSON.parse(localStorage.getItem('nad_image_overrides') || '{}'); if (savedImages && typeof savedImages === 'object') patch({ imageOverrides: savedImages }); } catch (e) {}
     try { const savedTheme = localStorage.getItem('nad_theme'); if (savedTheme === 'dark' || savedTheme === 'light') patch({ theme: savedTheme }); } catch (e) {}
     try { const savedRegs = JSON.parse(localStorage.getItem('nad_registrations') || '[]'); if (Array.isArray(savedRegs)) patch({ adminRegistrations: savedRegs }); } catch (e) {}
@@ -134,13 +136,14 @@ export function AppStateProvider({ children }) {
         return { ...s, guestLoginError: s.lang === 'ar' ? STRINGS.ar.login.guestLoginNotFound : STRINGS.en.login.guestLoginNotFound };
       }
       try { localStorage.setItem('nad_role', 'guest'); } catch (e) {}
+            try { localStorage.setItem('nad_guest_identifier', match.email || match.phone || ''); } catch (e) {}
       const idx = STEP_KEYS.indexOf(s.loginIntent);
       setTimeout(() => {
         showToast(s.lang === 'ar' ? STRINGS.ar.login.guestWelcomeBack : STRINGS.en.login.guestWelcomeBack);
         navigate(s.loginIntent ? '/design/' + s.loginIntent : '/');
       }, 0);
       return {
-        ...s, role: 'guest',
+          ...s, role: 'guest', currentGuestIdentifier: match.email || match.phone || null,
         maxStepIndex: idx >= 0 ? Math.max(s.maxStepIndex, idx) : s.maxStepIndex,
         loginIntent: null, guestLoginIdentifier: '', guestLoginError: '',
       };
@@ -156,8 +159,9 @@ export function AppStateProvider({ children }) {
       }
       const reg = { id: Date.now(), email, phone, registeredAt: new Date().toISOString().slice(0, 10), status: 'pending' };
       const nextRegs = [...s.adminRegistrations, reg];
-      try { localStorage.setItem('nad_registrations', JSON.stringify(nextRegs)); } catch (e) {}
+       try { localStorage.setItem('nad_registrations', JSON.stringify(nextRegs)); } catch (e) {}
       try { localStorage.setItem('nad_role', 'guest'); } catch (e) {}
+      try { localStorage.setItem('nad_guest_identifier', email || phone || ''); } catch (e) {}
       const idx = STEP_KEYS.indexOf(s.loginIntent);
       try {
         const subject = encodeURIComponent('New NAD Design registration to verify');
@@ -171,7 +175,7 @@ export function AppStateProvider({ children }) {
         navigate(s.loginIntent ? '/design/' + s.loginIntent : '/');
       }, 0);
       return {
-        ...s, adminRegistrations: nextRegs, role: 'guest',
+            ...s, adminRegistrations: nextRegs, role: 'guest', currentGuestIdentifier: email || phone || null,
         maxStepIndex: idx >= 0 ? Math.max(s.maxStepIndex, idx) : s.maxStepIndex,
         loginIntent: null, guestEmail: '', guestPhone: '', guestFormError: '',
       };
@@ -194,10 +198,11 @@ export function AppStateProvider({ children }) {
 
   const logout = useCallback(() => {
     try { localStorage.removeItem('nad_role'); } catch (e) {}
+    try { localStorage.removeItem('nad_guest_identifier'); } catch (e) {}
     if (isSupabaseConfigured) {
       supabase.auth.signOut().catch(() => {});
     }
-    patch({ role: null });
+    patch({ role: null, currentGuestIdentifier: null });
     navigate('/');
   }, [patch, navigate]);
 
@@ -348,12 +353,13 @@ export function AppStateProvider({ children }) {
     const prompt = (state.promptDraft !== null && state.promptDraft !== undefined) ? state.promptDraft : getAutoPrompt();
     patch({ generationStatus: 'generating', generationError: null });
     const uploadedImage = (state.selections.uploads || []).find((u) => u.isImage && u.dataUrl);
-    const result = await requestNanoBananaDesign({
+     const result = await requestNanoBananaDesign({
       prompt,
       imageDataUrl: uploadedImage ? uploadedImage.dataUrl : undefined,
       aspectRatio: state.generationAspectRatio || AI_GENERATION_CONFIG.defaultAspectRatio,
       imageSize: state.generationImageSize || AI_GENERATION_CONFIG.defaultImageSize,
       projectId: state.selections.projectType ? state.selections.projectType.key : null,
+      guestIdentifier: state.role === 'guest' ? state.currentGuestIdentifier : null,
     });
     if (result.success) {
       patch((s) => ({ generationStatus: 'done', generationVersion: (s.generationVersion || 0) + 1, generatedImageUrl: result.image, generationError: null }));
