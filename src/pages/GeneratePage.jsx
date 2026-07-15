@@ -7,8 +7,16 @@ import { AI_GENERATION_CONFIG } from '../config/aiGeneration.js';
 import PromptPreview from '../components/PromptPreview.jsx';
 import ComparisonViewer from '../components/ComparisonViewer.jsx';
 import ConsultationButton from '../components/ConsultationButton.jsx';
+import GenerationQuota from '../components/GenerationQuota.jsx';
 import Hoverable from '../components/Hoverable.jsx';
 import { sx } from '../utils/sx.js';
+import { AI_GENERATION_CONFIG as AI_CFG } from '../config/aiGeneration.js';
+
+const shimmerStyle = {
+  background: 'linear-gradient(90deg, oklch(92% 0.01 75) 0%, oklch(97% 0.005 80) 50%, oklch(92% 0.01 75) 100%)',
+  backgroundSize: '800px 100%',
+  animation: 'nad-shimmer 1.4s infinite linear',
+};
 
 const ghostBtnStyle = 'font-size:12px;font-weight:600;padding:11px 10px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;transition:transform .18s ease,background .18s ease;';
 const ghostBtnHoverStyle = 'transform:translateY(-2px);background:var(--border);';
@@ -80,7 +88,7 @@ export default function GeneratePage() {
             <Hoverable as="button" type="button" style={ghostBtnStyle} hoverStyle={ghostBtnHoverStyle} onClick={() => navigate('/design/furniture')}>{T.generate.changeFurniture}</Hoverable>
             <ConsultationButton style={ghostBtnStyle} hoverStyle={ghostBtnHoverStyle} label={T.generate.consult} />
           </div>
-          <div style={{ fontSize: 11.5, color: 'var(--text-2)', textAlign: 'center', marginTop: 10 }}>{T.generate.remainingGenerations.replace('{n}', String(remainingGenerations))}</div>
+          <GenerationQuota used={Math.max(0, AI_CFG.maxGenerationsPerSession - remainingGenerations)} cap={AI_CFG.maxGenerationsPerSession} label={T.generate.remainingGenerations.replace('{n}', String(remainingGenerations))} />
         </div>
         <div>
           {isGenIdle && (
@@ -89,10 +97,12 @@ export default function GeneratePage() {
             </div>
           )}
           {isGenLoading && (
-            <div style={{ aspectRatio: '4/3', borderRadius: 16, background: 'oklch(93% 0.015 78)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }} role="status" aria-live="polite">
-              <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'oklch(64% 0.10 68)', animation: 'nad-spin 0.9s linear infinite' }} aria-hidden="true" />
-              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', textAlign: 'center' }}>{T.generate.creatingMessage}</span>
-              <span style={{ fontSize: 12.5, color: 'var(--text-2)', textAlign: 'center', maxWidth: 260 }}>{T.generate.creatingSubMessage}</span>
+            <div role="status" aria-live="polite">
+              <div style={{ aspectRatio: '4/3', borderRadius: 16, ...shimmerStyle }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center', marginTop: 16 }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', textAlign: 'center' }}>{T.generate.creatingMessage}</span>
+                <span style={{ fontSize: 12.5, color: 'var(--text-2)', textAlign: 'center', maxWidth: 260 }}>{T.generate.creatingSubMessage}</span>
+              </div>
             </div>
           )}
           {isGenError && (

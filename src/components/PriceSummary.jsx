@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useAppState } from '../hooks/useAppState.js';
 import { STRINGS, fmtSar } from '../data/translations.js';
+import { useCountUp } from '../hooks/useCountUp.js';
 import Hoverable from './Hoverable.jsx';
 
 // Summary step — sticky cost-breakdown card (right column) with the Generate CTA,
@@ -10,9 +11,20 @@ export default function PriceSummary() {
   const lang = state.lang;
   const T = STRINGS[lang];
   const cost = computeCost();
+  const animatedTotal = useCountUp(cost.total);
+  const prevTotal = useRef(cost.total);
+  const [pulse, setPulse] = useState(false);
+  useEffect(() => {
+    if (prevTotal.current !== cost.total) {
+      setPulse(true);
+      prevTotal.current = cost.total;
+      const t = setTimeout(() => setPulse(false), 500);
+      return () => clearTimeout(t);
+    }
+  }, [cost.total]);
   const costFmt = {
     perSqm: fmtSar(cost.perSqm, lang), materials: fmtSar(cost.materialsAddon, lang), furniture: fmtSar(cost.furnitureCost, lang),
-    lighting: fmtSar(cost.lightingCost, lang), installation: fmtSar(cost.installation, lang), designFee: fmtSar(cost.designFee, lang), total: fmtSar(cost.total, lang),
+    lighting: fmtSar(cost.lightingCost, lang), installation: fmtSar(cost.installation, lang), designFee: fmtSar(cost.designFee, lang), total: fmtSar(animatedTotal, lang),
   };
   const whatsappLink = buildWhatsAppLink();
 
@@ -25,7 +37,7 @@ export default function PriceSummary() {
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, padding: '9px 0', borderBottom: '1px solid oklch(40% 0.02 55)' }}><span>{T.summary.lightingCost}</span><span>{costFmt.lighting}</span></div>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, padding: '9px 0', borderBottom: '1px solid oklch(40% 0.02 55)' }}><span>{T.summary.installationCost}</span><span>{costFmt.installation}</span></div>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, padding: '9px 0', borderBottom: '1px solid oklch(40% 0.02 55)' }}><span>{T.summary.designFee}</span><span>{costFmt.designFee}</span></div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16.5, fontWeight: 700, padding: '16px 0 6px', color: 'oklch(72% 0.10 68)' }}><span>{T.summary.total}</span><span>{costFmt.total}</span></div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16.5, fontWeight: 700, padding: '16px 0 6px', color: 'oklch(72% 0.10 68)' }}><span>{T.summary.total}</span><span style={pulse ? { animation: 'nad-pulse-total .5s ease' } : undefined}>{costFmt.total}</span></div>
       <div style={{ fontSize: 11.5, color: 'oklch(70% 0.01 80)', lineHeight: 1.5, marginTop: 10 }}>{T.summary.disclaimer}</div>
       <Hoverable as="button" type="button" style="width:100%;margin-top:20px;padding:15px;border-radius:100px;border:none;background:oklch(64% 0.10 68);color:oklch(16% 0.02 50);font-weight:700;font-size:14.5px;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;" hoverStyle="transform:translateY(-2px);box-shadow:0 10px 24px -8px oklch(0% 0 0 / 0.4);filter:brightness(1.08);" onClick={goGenerate}>{T.summary.generateCta}</Hoverable>
       <a href={whatsappLink} target="_blank" rel="noreferrer" style={{ display: 'block' }}>

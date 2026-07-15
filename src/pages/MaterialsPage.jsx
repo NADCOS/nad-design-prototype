@@ -12,6 +12,7 @@ export default function MaterialsPage() {
   const navigate = useNavigate();
   const { state, setMaterialTab, chooseMaterial, openMaterialDetail, removeFromBoard, nextFromMaterials, handleAdminImageChange } = useAppState();
   const [tab, setTab] = useState(state.materialTab || 'flooring');
+  const [hoverItem, setHoverItem] = useState(null);
   const lang = state.lang;
   const T = STRINGS[lang];
   const isAdmin = state.role === 'admin';
@@ -19,8 +20,12 @@ export default function MaterialsPage() {
 
   const activeCat = MATERIAL_CATEGORIES.find((c) => c.key === tab) || MATERIAL_CATEGORIES[0];
   const recs = (state.selections.stylePrimary && STYLE_RECS[state.selections.stylePrimary.key]) || [];
+  const chosenForCat = state.selections.materials[activeCat.key];
+  const previewItem = hoverItem || chosenForCat;
+  const previewSlotId = previewItem ? materialSlotId(activeCat.key, previewItem.en || previewItem[0]) : null;
+  const previewSrc = previewSlotId ? (state.imageOverrides[previewSlotId] || PREFILL_MATERIAL_IMAGES[previewSlotId.slice(4)] || '') : '';
 
-  function selectTab(key) { setTab(key); setMaterialTab(key); }
+  function selectTab(key) { setTab(key); setMaterialTab(key); setHoverItem(null); }
 
   return (
     <section data-screen-label="Materials">
@@ -33,21 +38,41 @@ export default function MaterialsPage() {
           return <div key={cat.key} onClick={() => selectTab(cat.key)} style={sx(tabStyle)} role="tab" aria-selected={active} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && selectTab(cat.key)}>{cat[lang]}</div>;
         })}
       </div>
-      <div className="nad-grid-5" style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 14 }}>
-        {activeCat.items.map((item) => {
-          const chosen = state.selections.materials[activeCat.key] && state.selections.materials[activeCat.key].en === item[0];
-          const slotId = materialSlotId(activeCat.key, item[0]);
-          const name = item[lang === 'ar' ? 1 : 0];
-          return (
-            <MaterialCard
-              key={item[0]} name={name} isRecommended={recs.includes(item[0])} recommendedLabel={T.materials.recommended} badgeSide={badgeSide}
-              slotId={slotId} prefillSrc={PREFILL_MATERIAL_IMAGES[slotId.slice(4)] || ''} isAdmin={isAdmin}
-              overrideUrl={state.imageOverrides[slotId] || ''} onAdminImageChange={(e) => handleAdminImageChange(slotId, e)}
-              editLabel={T.common.edit} chosen={chosen}
-              onSelect={() => { chooseMaterial(activeCat.key, item); openMaterialDetail(activeCat.key, item); }}
-            />
-          );
-        })}
+      <div className="nad-grid-split" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 24, alignItems: 'start', marginBottom: 8 }}>
+        <div className="nad-grid-5" style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 14 }}>
+          {activeCat.items.map((item) => {
+            const chosen = state.selections.materials[activeCat.key] && state.selections.materials[activeCat.key].en === item[0];
+            const slotId = materialSlotId(activeCat.key, item[0]);
+            const name = item[lang === 'ar' ? 1 : 0];
+            return (
+              <MaterialCard
+                key={item[0]} name={name} isRecommended={recs.includes(item[0])} recommendedLabel={T.materials.recommended} badgeSide={badgeSide}
+                slotId={slotId} prefillSrc={PREFILL_MATERIAL_IMAGES[slotId.slice(4)] || ''} isAdmin={isAdmin}
+                overrideUrl={state.imageOverrides[slotId] || ''} onAdminImageChange={(e) => handleAdminImageChange(slotId, e)}
+                editLabel={T.common.edit} chosen={chosen}
+                onHover={() => setHoverItem({ en: item[0], ar: item[1] })}
+                onSelect={() => { chooseMaterial(activeCat.key, item); openMaterialDetail(activeCat.key, item); }}
+              />
+            );
+          })}
+        </div>
+        <div style={{ position: 'sticky', top: 90, borderRadius: 16, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--border)' }}>
+          <div style={{ aspectRatio: '4/3', position: 'relative', background: 'oklch(90% 0.02 75)' }}>
+            {previewSrc && (
+              <img src={previewSrc} alt={previewItem ? previewItem[lang === 'ar' ? 1 : 0] || previewItem.en : ''} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+            )}
+            {previewItem && (
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '14px 16px', background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)' }}>
+                <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{previewItem[lang === 'ar' ? 1 : 0] || previewItem.en}</span>
+              </div>
+            )}
+            {!previewItem && (
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: 12.5, color: 'var(--text-2)' }}>{T.materials.sub}</span>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
       <div style={{ marginTop: 30, paddingTop: 22, borderTop: '1px solid var(--border)' }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 12 }}>{T.materials.board}</div>
