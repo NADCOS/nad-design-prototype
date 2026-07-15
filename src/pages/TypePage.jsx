@@ -12,7 +12,7 @@ export default function TypePage() {
   const lang = state.lang;
   const T = STRINGS[lang];
   const isAdmin = state.role === 'admin';
-  const [brokenImageIds, setBrokenImageIds] = useState({});
+  const [brokenImageUrls, setBrokenImageUrls] = useState({});
 
   useEffect(() => {
     if (isSupabaseConfigured) loadProjectTypes();
@@ -37,7 +37,7 @@ export default function TypePage() {
         key: row.id,
         name: row.name,
         desc: row.description || '',
-        imageUrl: (!brokenImageIds[row.id] && row.imageUrl) ? row.imageUrl : localFallbackImageFor(row.name),
+        imageUrl: (row.imageUrl && !brokenImageUrls[row.imageUrl]) ? row.imageUrl : localFallbackImageFor(row.name),
         remoteRow: row,
       }))
     : PROJECT_TYPES.map((pt) => ({ key: pt.key, name: pt[lang], desc: pt[lang + 'Desc'], imageUrl: PREFILL_PROJECT_IMAGES[pt.key] || '', remoteRow: null }));
@@ -84,7 +84,7 @@ export default function TypePage() {
                 isAdmin={isAdmin}
                 overrideUrl={card.remoteRow ? '' : (state.imageOverrides['type-' + card.key] || '')}
                 prefillSrc={card.imageUrl}
-                onImageError={card.remoteRow ? () => setBrokenImageIds((prev) => ({ ...prev, [card.remoteRow.id]: true })) : undefined}
+                onImageError={card.remoteRow && card.remoteRow.imageUrl ? () => setBrokenImageUrls((prev) => ({ ...prev, [card.remoteRow.imageUrl]: true })) : undefined}
                 onAdminImageChange={(e) => handleAdminImageChange('type-' + card.key, e)}
                 editLabel={T.common.edit}
                 onSelect={() => handleSelect(card)}

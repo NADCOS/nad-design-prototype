@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { sx } from '../utils/sx.js';
 
 // Lightweight stand-in for the prototype's <image-slot> web component:
@@ -15,6 +15,20 @@ export default function ImageSlot({ id, src, placeholder, style }) {
   });
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef(null);
+  const prevSrcRef = useRef(src);
+
+  // Keep this in sync when `src` changes after a fresh save (e.g. a new
+  // Supabase-hosted image URL from the admin edit modal) — otherwise this
+  // component's local state would keep showing whatever it first mounted with.
+  useEffect(() => {
+    if (src !== prevSrcRef.current) {
+      prevSrcRef.current = src;
+      if (src) {
+        setDataUrl(src);
+        try { localStorage.setItem(storageKey, src); } catch (e) {}
+      }
+    }
+  }, [src, storageKey]);
 
   const readFile = (file) => {
     if (!file || !file.type.startsWith('image/')) return;
