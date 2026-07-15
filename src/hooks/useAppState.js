@@ -475,7 +475,7 @@ export function AppStateProvider({ children }) {
     getRemainingGenerations,
   };
 
-  return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;
+  return React.createElement(AppStateContext.Provider, { value }, children);
 }
 
 export function useAppState() {
