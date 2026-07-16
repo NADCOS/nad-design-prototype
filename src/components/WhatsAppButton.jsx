@@ -3,7 +3,7 @@ import { useAppState } from '../hooks/useAppState.js';
 import { STRINGS } from '../data/translations.js';
 
 // Business WhatsApp number replies go to — digits only, country code first, no leading +.
-const BUSINESS_WHATSAPP_NUMBER = '9665XXXXXXXX';
+const BUSINESS_WHATSAPP_NUMBER = '966534581911';
 
 export default function WhatsAppButton() {
   const { state } = useAppState();
