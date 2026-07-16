@@ -251,6 +251,7 @@ export function AppStateProvider({ children }) {
   }), []);
   const toggleSupplierStatus = useCallback((id) => patch((s) => ({ adminSuppliers: s.adminSuppliers.map((sup) => (sup.id === id ? { ...sup, status: sup.status === 'approved' ? 'hidden' : 'approved' } : sup)) })), [patch]);
   const removeSupplier = useCallback((id) => patch((s) => ({ adminSuppliers: s.adminSuppliers.filter((sup) => sup.id !== id) })), [patch]);
+  const updateSupplierField = useCallback((id, field, value) => patch((s) => ({ adminSuppliers: s.adminSuppliers.map((sup) => (sup.id === id ? { ...sup, [field]: value } : sup)) })), [patch]);
 
   const setConsultationStatus = useCallback((id, status) => patch((s) => ({ adminConsultations: s.adminConsultations.map((c) => (c.id === id ? { ...c, status } : c)) })), [patch]);
   const removeConsultation = useCallback((id) => patch((s) => ({ adminConsultations: s.adminConsultations.filter((c) => c.id !== id) })), [patch]);
@@ -509,7 +510,7 @@ export function AppStateProvider({ children }) {
     setGuestPanelMode, setGuestLoginIdentifier, loginAsGuest,
     goToAdmin, setAdminTab, setRegistrationStatus,
     getLevelRangeFor, setPriceOverride,
-    setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone, addSupplier, toggleSupplierStatus, removeSupplier,
+    setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone, addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,
     setConsultationStatus, removeConsultation, removeClient,
     goHome, goToStart, goToLevels, toggleLang, goToStep, advanceTo,
     selectProjectType, setCustomType, nextFromType,

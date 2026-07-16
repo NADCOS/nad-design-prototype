@@ -11,7 +11,7 @@ export default function AdminPage() {
   const navigate = useNavigate();
   const {
     state, setAdminTab, setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone,
-    addSupplier, toggleSupplierStatus, removeSupplier,
+    addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,
     getLevelRangeFor, setPriceOverride, setConsultationStatus, removeConsultation, removeClient, setRegistrationStatus,
   } = useAppState();
   const T = STRINGS[state.lang];
@@ -65,15 +65,26 @@ export default function AdminPage() {
             {state.adminSuppliers.map((sup) => {
               const statusStyle = 'font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;background:' + (sup.status === 'approved' ? 'oklch(90% 0.06 145)' : 'var(--border)') + ';color:' + (sup.status === 'approved' ? 'oklch(35% 0.08 145)' : 'oklch(45% 0.02 55)') + ';';
               const siteHref = sup.website && (/^https?:\/\//i.test(sup.website) ? sup.website : 'https://' + sup.website);
+              const cellField = (field, extra) => 'font-size:12px;color:var(--text-2);background:transparent;border:none;border-bottom:1px dashed var(--border);padding:2px 0;width:100%;min-width:0;box-sizing:border-box;' + (extra || '');
+              const linkStyle = { fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' };
               return (
-                <div key={sup.id} style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1.7fr auto auto auto', minWidth: 820, gap: 14, alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text)' }}>{sup.name}</div>
-                  <div style={{ fontSize: 12.5, color: 'var(--text-2)' }}>{sup.category}</div>
-                  <div style={{ fontSize: 12.5, color: 'var(--text-2)' }}>{sup.delivery}</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 12 }}>
-                    {siteHref && <a href={siteHref} target="_blank" rel="noreferrer noopener" style={{ fontWeight: 600, textDecoration: 'underline' }}>{sup.website.replace(/^https?:\/\//i, '')}</a>}
-                    {sup.email && <a href={'mailto:' + sup.email} style={{ color: 'oklch(50% 0.02 55)', fontFamily: 'ui-monospace,monospace' }}>{sup.email}</a>}
-                    {sup.phone && <a href={'tel:' + sup.phone.replace(/[^\d+]/g, '')} style={{ color: 'oklch(50% 0.02 55)' }}>{sup.phone}</a>}
+                <div key={sup.id} style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1.7fr auto auto auto', minWidth: 860, gap: 14, alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
+                  <input value={sup.name} onChange={(e) => updateSupplierField(sup.id, 'name', e.target.value)} style={sx(cellField('name', 'font-weight:600;color:var(--text);font-size:13.5px;'))} aria-label={T.admin.suppliers.name} />
+                  <input value={sup.category} onChange={(e) => updateSupplierField(sup.id, 'category', e.target.value)} style={sx(cellField('category', 'font-size:12.5px;'))} aria-label={T.admin.suppliers.category} />
+                  <input value={sup.delivery} onChange={(e) => updateSupplierField(sup.id, 'delivery', e.target.value)} style={sx(cellField('delivery', 'font-size:12.5px;'))} aria-label={T.admin.suppliers.delivery} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {siteHref && <a href={siteHref} target="_blank" rel="noreferrer noopener" style={linkStyle}>{T.admin.suppliers.linkLabel}</a>}
+                      <input value={sup.website} onChange={(e) => updateSupplierField(sup.id, 'website', e.target.value)} placeholder={T.admin.suppliers.websitePlaceholder} style={sx(cellField('website'))} aria-label={T.admin.suppliers.websitePlaceholder} />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {sup.email && <a href={'mailto:' + sup.email} style={linkStyle}>{T.admin.suppliers.emailLabel}</a>}
+                      <input value={sup.email} onChange={(e) => updateSupplierField(sup.id, 'email', e.target.value)} placeholder={T.admin.suppliers.emailPlaceholder} style={sx(cellField('email'))} aria-label={T.admin.suppliers.emailPlaceholder} />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {sup.phone && <a href={'tel:' + sup.phone.replace(/[^\d+]/g, '')} style={linkStyle}>{T.admin.suppliers.callLabel}</a>}
+                      <input value={sup.phone} onChange={(e) => updateSupplierField(sup.id, 'phone', e.target.value)} placeholder={T.admin.suppliers.phonePlaceholder} style={sx(cellField('phone'))} aria-label={T.admin.suppliers.phonePlaceholder} />
+                    </div>
                   </div>
                   <span style={sx(statusStyle)}>{sup.status === 'approved' ? T.admin.suppliers.approved : T.admin.suppliers.hidden}</span>
                   <button type="button" style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer', whiteSpace: 'nowrap', background: 'none', border: 'none', padding: 0 }} onClick={() => toggleSupplierStatus(sup.id)}>{sup.status === 'approved' ? T.admin.suppliers.hide : T.admin.suppliers.show}</button>
