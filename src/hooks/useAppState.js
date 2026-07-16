@@ -49,14 +49,22 @@ export function AppStateProvider({ children }) {
     loginError: '',
     adminTab: 'overview',
     priceOverrides: {},
-    adminSuppliers: SUPPLIERS.map((name, i) => ({
-      id: i, name,
-      category: ['Flooring & Stone', 'Furniture', 'Lighting', 'Fabrics', 'Metal & Hardware'][i % 5],
-      delivery: ['2-3 weeks', '4-6 weeks', '6-8 weeks'][i % 3],
-      contact: name.toLowerCase().replace(/[^a-z]+/g, '') + '@supplier.sa',
-      status: 'approved',
-    })),
+    adminSuppliers: SUPPLIERS.map((name, i) => {
+      const slug = name.toLowerCase().replace(/[^a-z]+/g, '');
+      return {
+        id: i, name,
+        category: ['Flooring & Stone', 'Furniture', 'Lighting', 'Fabrics', 'Metal & Hardware'][i % 5],
+        delivery: ['2-3 weeks', '4-6 weeks', '6-8 weeks'][i % 3],
+        website: 'https://' + slug + '.sa',
+        email: slug + '@supplier.sa',
+        phone: '+966 5' + (10 + i) + ' ' + (200 + i * 11) + ' ' + (4000 + i * 87),
+        status: 'approved',
+      };
+    }),
     newSupplierName: '',
+    newSupplierWebsite: '',
+    newSupplierEmail: '',
+    newSupplierPhone: '',
     adminConsultations: [
       { id: 1, name: 'Sara Al-Qahtani', type: 'online', date: '2026-07-18', project: 'Villa', status: 'pending' },
       { id: 2, name: 'Faisal Al-Otaibi', type: 'inPerson', date: '2026-07-20', project: 'Office', status: 'confirmed' },
@@ -221,16 +229,24 @@ export function AppStateProvider({ children }) {
   }, [patch]);
 
   const setNewSupplierName = useCallback((e) => patch({ newSupplierName: e.target.value }), [patch]);
+  const setNewSupplierWebsite = useCallback((e) => patch({ newSupplierWebsite: e.target.value }), [patch]);
+  const setNewSupplierEmail = useCallback((e) => patch({ newSupplierEmail: e.target.value }), [patch]);
+  const setNewSupplierPhone = useCallback((e) => patch({ newSupplierPhone: e.target.value }), [patch]);
   const addSupplier = useCallback(() => setState((s) => {
     const name = s.newSupplierName.trim();
     if (!name) return s;
+    const slug = name.toLowerCase().replace(/[^a-z]+/g, '');
     return {
       ...s,
       adminSuppliers: [...s.adminSuppliers, {
         id: s.adminSuppliers.reduce((m, x) => Math.max(m, x.id), 0) + 1, name,
-        category: 'Furniture', delivery: '4-6 weeks', contact: name.toLowerCase().replace(/[^a-z]+/g, '') + '@supplier.sa', status: 'approved',
+        category: 'Furniture', delivery: '4-6 weeks',
+        website: s.newSupplierWebsite.trim() || ('https://' + slug + '.sa'),
+        email: s.newSupplierEmail.trim() || (slug + '@supplier.sa'),
+        phone: s.newSupplierPhone.trim(),
+        status: 'approved',
       }],
-      newSupplierName: '',
+      newSupplierName: '', newSupplierWebsite: '', newSupplierEmail: '', newSupplierPhone: '',
     };
   }), []);
   const toggleSupplierStatus = useCallback((id) => patch((s) => ({ adminSuppliers: s.adminSuppliers.map((sup) => (sup.id === id ? { ...sup, status: sup.status === 'approved' ? 'hidden' : 'approved' } : sup)) })), [patch]);
@@ -493,7 +509,7 @@ export function AppStateProvider({ children }) {
     setGuestPanelMode, setGuestLoginIdentifier, loginAsGuest,
     goToAdmin, setAdminTab, setRegistrationStatus,
     getLevelRangeFor, setPriceOverride,
-    setNewSupplierName, addSupplier, toggleSupplierStatus, removeSupplier,
+    setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone, addSupplier, toggleSupplierStatus, removeSupplier,
     setConsultationStatus, removeConsultation, removeClient,
     goHome, goToStart, goToLevels, toggleLang, goToStep, advanceTo,
     selectProjectType, setCustomType, nextFromType,

@@ -10,7 +10,8 @@ const inputSm = 'padding:12px 14px;border-radius:10px;border:1px solid oklch(75%
 export default function AdminPage() {
   const navigate = useNavigate();
   const {
-    state, setAdminTab, setNewSupplierName, addSupplier, toggleSupplierStatus, removeSupplier,
+    state, setAdminTab, setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone,
+    addSupplier, toggleSupplierStatus, removeSupplier,
     getLevelRangeFor, setPriceOverride, setConsultationStatus, removeConsultation, removeClient, setRegistrationStatus,
   } = useAppState();
   const T = STRINGS[state.lang];
@@ -53,19 +54,27 @@ export default function AdminPage() {
 
       {state.adminTab === 'suppliers' && (
         <>
-          <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
-            <input value={state.newSupplierName} onChange={setNewSupplierName} placeholder={T.admin.suppliers.addPlaceholder} style={{ ...sx(inputSm), flex: 1 }} aria-label={T.admin.suppliers.addPlaceholder} />
+          <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+            <input value={state.newSupplierName} onChange={setNewSupplierName} placeholder={T.admin.suppliers.addPlaceholder} style={{ ...sx(inputSm), flex: '1 1 180px' }} aria-label={T.admin.suppliers.addPlaceholder} />
+            <input value={state.newSupplierWebsite} onChange={setNewSupplierWebsite} placeholder={T.admin.suppliers.websitePlaceholder} style={{ ...sx(inputSm), flex: '1 1 180px' }} aria-label={T.admin.suppliers.websitePlaceholder} />
+            <input value={state.newSupplierEmail} onChange={setNewSupplierEmail} placeholder={T.admin.suppliers.emailPlaceholder} style={{ ...sx(inputSm), flex: '1 1 180px' }} aria-label={T.admin.suppliers.emailPlaceholder} />
+            <input value={state.newSupplierPhone} onChange={setNewSupplierPhone} placeholder={T.admin.suppliers.phonePlaceholder} style={{ ...sx(inputSm), flex: '1 1 160px' }} aria-label={T.admin.suppliers.phonePlaceholder} />
             <button type="button" style={{ padding: '12px 22px', borderRadius: 100, border: 'none', background: 'var(--btn-bg)', color: 'var(--btn-text)', fontWeight: 600, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={addSupplier}>{T.admin.suppliers.add}</button>
           </div>
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflowX: 'auto' }}>
             {state.adminSuppliers.map((sup) => {
               const statusStyle = 'font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;background:' + (sup.status === 'approved' ? 'oklch(90% 0.06 145)' : 'var(--border)') + ';color:' + (sup.status === 'approved' ? 'oklch(35% 0.08 145)' : 'oklch(45% 0.02 55)') + ';';
+              const siteHref = sup.website && (/^https?:\/\//i.test(sup.website) ? sup.website : 'https://' + sup.website);
               return (
-                <div key={sup.id} style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1.3fr auto auto auto', minWidth: 700, gap: 14, alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
+                <div key={sup.id} style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1.7fr auto auto auto', minWidth: 820, gap: 14, alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text)' }}>{sup.name}</div>
                   <div style={{ fontSize: 12.5, color: 'var(--text-2)' }}>{sup.category}</div>
                   <div style={{ fontSize: 12.5, color: 'var(--text-2)' }}>{sup.delivery}</div>
-                  <div style={{ fontSize: 12, color: 'oklch(50% 0.02 55)', fontFamily: 'ui-monospace,monospace' }}>{sup.contact}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 12 }}>
+                    {siteHref && <a href={siteHref} target="_blank" rel="noreferrer noopener" style={{ fontWeight: 600, textDecoration: 'underline' }}>{sup.website.replace(/^https?:\/\//i, '')}</a>}
+                    {sup.email && <a href={'mailto:' + sup.email} style={{ color: 'oklch(50% 0.02 55)', fontFamily: 'ui-monospace,monospace' }}>{sup.email}</a>}
+                    {sup.phone && <a href={'tel:' + sup.phone.replace(/[^\d+]/g, '')} style={{ color: 'oklch(50% 0.02 55)' }}>{sup.phone}</a>}
+                  </div>
                   <span style={sx(statusStyle)}>{sup.status === 'approved' ? T.admin.suppliers.approved : T.admin.suppliers.hidden}</span>
                   <button type="button" style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer', whiteSpace: 'nowrap', background: 'none', border: 'none', padding: 0 }} onClick={() => toggleSupplierStatus(sup.id)}>{sup.status === 'approved' ? T.admin.suppliers.hide : T.admin.suppliers.show}</button>
                   <button type="button" style={{ fontSize: 12, fontWeight: 600, color: 'oklch(50% 0.12 30)', cursor: 'pointer', whiteSpace: 'nowrap', background: 'none', border: 'none', padding: 0 }} onClick={() => removeSupplier(sup.id)}>{T.admin.suppliers.remove}</button>
