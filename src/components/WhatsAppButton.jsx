@@ -2,18 +2,22 @@ import React from 'react';
 import { useAppState } from '../hooks/useAppState.js';
 import { STRINGS } from '../data/translations.js';
 
-const STORAGE_KEY = 'nad_chat_messages';
+const SESSION_KEY = 'nad_chat_session_id';
+const SEEN_KEY = 'nad_chat_seen_count';
+const POLL_OPEN_MS = 4000;
+const POLL_CLOSED_MS = 20000;
 
-function loadMessages() {
+function getSessionId() {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    if (Array.isArray(saved) && saved.length) return saved;
-  } catch (e) {}
-  return null;
-}
-
-function saveMessages(msgs) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs)); } catch (e) {}
+    let id = localStorage.getItem(SESSION_KEY);
+    if (!id) {
+      id = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : ('sess-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+      localStorage.setItem(SESSION_KEY, id);
+    }
+    return id;
+  } catch (e) {
+    return 'sess-' + Date.now();
+  }
 }
 
 export default function WhatsAppButton() {
@@ -23,27 +27,80 @@ export default function WhatsAppButton() {
   const [open, setOpen] = React.useState(false);
   const [hover, setHover] = React.useState(false);
   const [input, setInput] = React.useState('');
-  const [typing, setTyping] = React.useState(false);
-  const [messages, setMessages] = React.useState(() => loadMessages() || [{ from: 'agent', text: T.welcome }]);
+  const [messages, setMessages] = React.useState([{ sender: 'admin', text: T.welcome, local: true }]);
+  const [backendOk, setBackendOk] = React.useState(true);
+  const [sending, setSending] = React.useState(false);
+  const [unread, setUnread] = React.useState(0);
   const listRef = React.useRef(null);
+  const sessionId = React.useRef(getSessionId()).current;
   const replyTimer = React.useRef(null);
 
-  React.useEffect(() => { saveMessages(messages); }, [messages]);
+  const fetchMessages = React.useCallback((markSeen) => {
+    fetch('/api/chat-messages?sessionId=' + encodeURIComponent(sessionId)).then((r) => r.json()).then((data) => {
+      if (data && data.success) {
+        setBackendOk(true);
+        setMessages((prev) => {
+          const welcome = prev.find((m) => m.local);
+          const next = welcome ? [welcome, ...data.messages] : data.messages;
+          if (!markSeen) {
+            let seen = 0;
+            try { seen = Number(localStorage.getItem(SEEN_KEY) || 0); } catch (e) {}
+            const adminCount = next.filter((m) => m.sender === 'admin').length;
+            setUnread(Math.max(0, adminCount - seen));
+          }
+          return next;
+        });
+      } else {
+        setBackendOk(false);
+      }
+    }).catch(() => setBackendOk(false));
+  }, [sessionId]);
+
+  React.useEffect(() => { fetchMessages(false); }, [fetchMessages]);
+
+  React.useEffect(() => {
+    if (!backendOk) return undefined;
+    const t = setInterval(() => fetchMessages(false), open ? POLL_OPEN_MS : POLL_CLOSED_MS);
+    return () => clearInterval(t);
+  }, [backendOk, open, fetchMessages]);
+
   React.useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
-  }, [messages, typing, open]);
+  }, [messages, open]);
+
+  React.useEffect(() => {
+    if (open) {
+      const adminCount = messages.filter((m) => m.sender === 'admin').length;
+      try { localStorage.setItem(SEEN_KEY, String(adminCount)); } catch (e) {}
+      setUnread(0);
+    }
+  }, [open, messages]);
+
   React.useEffect(() => () => { if (replyTimer.current) clearTimeout(replyTimer.current); }, []);
 
   const send = () => {
     const text = input.trim();
-    if (!text) return;
-    setMessages((m) => [...m, { from: 'user', text }]);
+    if (!text || sending) return;
     setInput('');
-    setTyping(true);
-    replyTimer.current = setTimeout(() => {
-      setTyping(false);
-      setMessages((m) => [...m, { from: 'agent', text: T.autoReply }]);
-    }, 1200);
+    if (!backendOk) {
+      setMessages((m) => [...m, { sender: 'user', text }]);
+      replyTimer.current = setTimeout(() => setMessages((m) => [...m, { sender: 'admin', text: T.autoReply }]), 1200);
+      return;
+    }
+    setMessages((m) => [...m, { sender: 'user', text, pending: true }]);
+    setSending(true);
+    const identifier = state.role === 'guest' ? state.currentGuestIdentifier : null;
+    fetch('/api/chat-messages', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, identifier, sender: 'user', text }),
+    }).then((r) => r.json()).then((data) => {
+      setSending(false);
+      if (data && data.success) fetchMessages(true);
+      else setMessages((m) => [...m, { sender: 'admin', text: T.autoReply }]);
+    }).catch(() => {
+      setSending(false);
+      setMessages((m) => [...m, { sender: 'admin', text: T.autoReply }]);
+    });
   };
 
   const onKeyDown = (e) => {
@@ -64,17 +121,10 @@ export default function WhatsAppButton() {
           </div>
           <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '14px 12px', display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--bg)' }}>
             {messages.map((m, i) => (
-              <div key={i} style={{ alignSelf: m.from === 'user' ? 'flex-end' : 'flex-start', maxWidth: '82%', background: m.from === 'user' ? 'oklch(64% 0.10 68)' : 'var(--surface)', color: m.from === 'user' ? 'oklch(16% 0.02 50)' : 'var(--text)', border: m.from === 'user' ? 'none' : '1px solid var(--border)', padding: '9px 12px', borderRadius: 14, fontSize: 13.5, lineHeight: 1.5 }}>
+              <div key={m.id || i} style={{ alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start', maxWidth: '82%', background: m.sender === 'user' ? 'oklch(64% 0.10 68)' : 'var(--surface)', color: m.sender === 'user' ? 'oklch(16% 0.02 50)' : 'var(--text)', border: m.sender === 'user' ? 'none' : '1px solid var(--border)', padding: '9px 12px', borderRadius: 14, fontSize: 13.5, lineHeight: 1.5, opacity: m.pending ? 0.6 : 1 }}>
                 {m.text}
               </div>
             ))}
-            {typing && (
-              <div style={{ alignSelf: 'flex-start', display: 'flex', gap: 4, padding: '10px 12px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14 }}>
-                {[0, 1, 2].map((d) => (
-                  <span key={d} style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text-2)', opacity: 0.6, animation: 'nad-chat-dot 1s ease-in-out infinite', animationDelay: (d * 0.15) + 's' }} />
-                ))}
-              </div>
-            )}
           </div>
           <div style={{ display: 'flex', gap: 8, padding: 10, borderTop: '1px solid var(--border)', background: 'var(--surface)' }}>
             <input
@@ -97,11 +147,14 @@ export default function WhatsAppButton() {
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         style={{
-          width: 58, height: 58, borderRadius: '50%', background: '#000', border: 'none', cursor: 'pointer',
+          position: 'relative', width: 58, height: 58, borderRadius: '50%', background: '#000', border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: hover ? '0 12px 26px oklch(20% 0.02 50 / 0.45)' : '0 8px 20px oklch(20% 0.02 50 / 0.35)',
           transform: hover ? 'scale(1.08)' : 'scale(1)', transition: 'transform .18s ease,box-shadow .18s ease',
         }}
       >
+        {!open && unread > 0 && (
+          <span style={{ position: 'absolute', top: -2, insetInlineEnd: -2, minWidth: 20, height: 20, borderRadius: 100, background: 'oklch(58% 0.20 25)', color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px', border: '2px solid var(--bg,#fff)' }}>{unread}</span>
+        )}
         {open ? (
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
         ) : (

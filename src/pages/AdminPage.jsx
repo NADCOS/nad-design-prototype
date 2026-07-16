@@ -14,15 +14,22 @@ export default function AdminPage() {
     addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,
     getLevelRangeFor, setPriceOverride, setConsultationStatus, removeConsultation, removeClient, setRegistrationStatus,
     toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts,
+    loadChatConversations, openChatThread, setAdminChatReplyText, sendAdminChatReply,
   } = useAppState();
   const T = STRINGS[state.lang];
   const isAdmin = state.role === 'admin';
 
   useEffect(() => { if (!isAdmin) navigate('/login?intent=admin', { replace: true }); }, [isAdmin, navigate]);
   useEffect(() => { if (isAdmin) loadGenerationCounts(); }, [isAdmin, loadGenerationCounts]);
+  useEffect(() => {
+    if (!isAdmin || state.adminTab !== 'chats') return;
+    loadChatConversations();
+    const t = setInterval(loadChatConversations, 5000);
+    return () => clearInterval(t);
+  }, [isAdmin, state.adminTab, loadChatConversations]);
   if (!isAdmin) return null;
 
-  const tabs = ['overview', 'suppliers', 'pricing', 'consultations', 'clients', 'registrations'];
+  const tabs = ['overview', 'suppliers', 'pricing', 'consultations', 'clients', 'registrations', 'chats'];
   const registrationsSorted = [...state.adminRegistrations].reverse();
 
   return (
@@ -182,6 +189,45 @@ export default function AdminPage() {
             })}
           </div>
         </>
+      )}
+
+      {state.adminTab === 'chats' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 16, minHeight: 420 }} className="nad-admin-chats">
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflowY: 'auto', maxHeight: 560 }}>
+            {state.adminChatConversations.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-2)', padding: 18 }}>{T.admin.chats.empty}</div>}
+            {state.adminChatConversations.map((cv) => {
+              const active = state.adminChatActiveSession === cv.sessionId;
+              return (
+                <div key={cv.sessionId} onClick={() => openChatThread(cv.sessionId)} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && openChatThread(cv.sessionId)}
+                  style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', cursor: 'pointer', background: active ? 'var(--bg)' : 'transparent' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cv.identifier || T.admin.chats.anonymous}</span>
+                    {cv.unreadCount > 0 && <span style={{ fontSize: 10.5, fontWeight: 700, background: 'oklch(64% 0.10 68)', color: 'oklch(16% 0.02 50)', borderRadius: 100, padding: '2px 7px', flexShrink: 0 }}>{cv.unreadCount}</span>}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cv.lastSender === 'admin' ? T.admin.chats.you + ': ' : ''}{cv.lastMessage}</div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, display: 'flex', flexDirection: 'column', maxHeight: 560 }}>
+            {!state.adminChatActiveSession && <div style={{ fontSize: 13.5, color: 'var(--text-2)', padding: 24, margin: 'auto' }}>{T.admin.chats.selectPrompt}</div>}
+            {state.adminChatActiveSession && (
+              <>
+                <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {state.adminChatMessages.map((m) => (
+                    <div key={m.id} style={{ alignSelf: m.sender === 'admin' ? 'flex-end' : 'flex-start', maxWidth: '75%', background: m.sender === 'admin' ? 'oklch(64% 0.10 68)' : 'var(--bg)', color: m.sender === 'admin' ? 'oklch(16% 0.02 50)' : 'var(--text)', border: m.sender === 'admin' ? 'none' : '1px solid var(--border)', padding: '9px 12px', borderRadius: 14, fontSize: 13.5, lineHeight: 1.5 }}>
+                      {m.text}
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: 8, padding: 14, borderTop: '1px solid var(--border)' }}>
+                  <input value={state.adminChatReplyText} onChange={setAdminChatReplyText} onKeyDown={(e) => e.key === 'Enter' && sendAdminChatReply()} placeholder={T.admin.chats.placeholder} style={{ ...sx(inputSm), flex: 1 }} aria-label={T.admin.chats.placeholder} />
+                  <button type="button" onClick={sendAdminChatReply} style={{ padding: '12px 22px', borderRadius: 100, border: 'none', background: 'var(--btn-bg)', color: 'var(--btn-text)', fontWeight: 600, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}>{T.admin.chats.send}</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </main>
   );

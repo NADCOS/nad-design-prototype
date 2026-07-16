@@ -77,6 +77,7 @@ export function AppStateProvider({ children }) {
     ],
     adminRegistrations: [],
     generationCounts: {},
+    adminChatConversations: [], adminChatActiveSession: null, adminChatMessages: [], adminChatReplyText: '', adminChatLoading: false,
     guestEmail: '', guestPhone: '', guestFormError: '', loginIntent: null,
     guestPanelMode: 'signup', guestLoginIdentifier: '', guestLoginError: '',
     currentGuestIdentifier: null,
@@ -247,6 +248,38 @@ export function AppStateProvider({ children }) {
       if (data && data.success) patch({ generationCounts: data.counts || {} });
     }).catch(() => {});
   }, [patch]);
+  const loadChatConversations = useCallback(() => {
+    fetch('/api/chat-conversations').then((r) => r.json()).then((data) => {
+      if (data && data.success) patch({ adminChatConversations: data.conversations || [] });
+    }).catch(() => {});
+  }, [patch]);
+  const openChatThread = useCallback((sessionId) => {
+    patch({ adminChatActiveSession: sessionId, adminChatLoading: true, adminChatMessages: [] });
+    fetch('/api/chat-messages?sessionId=' + encodeURIComponent(sessionId)).then((r) => r.json()).then((data) => {
+      if (data && data.success) patch({ adminChatMessages: data.messages || [], adminChatLoading: false });
+      else patch({ adminChatLoading: false });
+    }).catch(() => patch({ adminChatLoading: false }));
+    fetch('/api/chat-mark-read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId }) })
+      .then(() => setState((s) => ({ ...s, adminChatConversations: s.adminChatConversations.map((c) => (c.sessionId === sessionId ? { ...c, unreadCount: 0 } : c)) })))
+      .catch(() => {});
+  }, [patch]);
+  const setAdminChatReplyText = useCallback((e) => patch({ adminChatReplyText: e.target.value }), [patch]);
+  const sendAdminChatReply = useCallback(() => setState((s) => {
+    const sessionId = s.adminChatActiveSession;
+    const text = s.adminChatReplyText.trim();
+    if (!sessionId || !text) return s;
+    fetch('/api/chat-messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, sender: 'admin', text }) })
+      .then((r) => r.json()).then((data) => {
+        if (data && data.success && data.message) {
+          setState((s2) => ({
+            ...s2,
+            adminChatMessages: s2.adminChatActiveSession === sessionId ? [...s2.adminChatMessages, data.message] : s2.adminChatMessages,
+            adminChatConversations: s2.adminChatConversations.map((c) => (c.sessionId === sessionId ? { ...c, lastMessage: text, lastSender: 'admin', lastMessageAt: data.message.created_at } : c)),
+          }));
+        }
+      }).catch(() => {});
+    return { ...s, adminChatReplyText: '' };
+  }), []);
 
   const getLevelRangeFor = useCallback((key) => getLevelRange(key, state.priceOverrides), [state.priceOverrides]);
   const setPriceOverride = useCallback((key, field) => (e) => {
@@ -549,6 +582,7 @@ export function AppStateProvider({ children }) {
     goToLogin, setLoginPasscode, setGuestEmail, setGuestPhone, registerGuest, loginAsAdmin, logout,
     setGuestPanelMode, setGuestLoginIdentifier, loginAsGuest,
     goToAdmin, setAdminTab, setRegistrationStatus, toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts,
+    loadChatConversations, openChatThread, setAdminChatReplyText, sendAdminChatReply,
     getLevelRangeFor, setPriceOverride,
     setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone, addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,
     setConsultationStatus, removeConsultation, removeClient,
