@@ -89,6 +89,7 @@ export function AppStateProvider({ children }) {
     editingProjectType: null, projectTypeSaving: false, projectTypeSaveError: null, projectTypeSaveSuccess: false,
     furnitureRemote: [], furnitureStatus: 'idle', furnitureError: null,
     editingFurnitureItem: null, furnitureItemIsNew: false, furnitureSaving: false, furnitureSaveError: null, furnitureSaveSuccess: false,
+    activityStats: { monthly: [], yearly: [] }, activityStatsStatus: 'idle',
   });
   const toastTimer = useRef(null);
 
@@ -250,6 +251,13 @@ export function AppStateProvider({ children }) {
     fetch('/api/admin-generation-counts').then((r) => r.json()).then((data) => {
       if (data && data.success) patch({ generationCounts: data.counts || {} });
     }).catch(() => {});
+  }, [patch]);
+  const loadActivityStats = useCallback(() => {
+    patch({ activityStatsStatus: 'loading' });
+    fetch('/api/admin-activity-stats').then((r) => r.json()).then((data) => {
+      if (data && data.success) patch({ activityStats: { monthly: data.monthly || [], yearly: data.yearly || [] }, activityStatsStatus: 'loaded' });
+      else patch({ activityStatsStatus: 'error' });
+    }).catch(() => patch({ activityStatsStatus: 'error' }));
   }, [patch]);
   const getLevelRangeFor = useCallback((key) => getLevelRange(key, state.priceOverrides), [state.priceOverrides]);
   const setPriceOverride = useCallback((key, field) => (e) => {
@@ -651,7 +659,7 @@ export function AppStateProvider({ children }) {
     toggleTheme, handleAdminImageChange,
     goToLogin, setLoginPasscode, setGuestEmail, setGuestPhone, registerGuest, loginAsAdmin, logout,
     setGuestPanelMode, setGuestLoginIdentifier, loginAsGuest,
-    goToAdmin, setAdminTab, setRegistrationStatus, toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts,
+    goToAdmin, setAdminTab, setRegistrationStatus, toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, loadActivityStats,
     getLevelRangeFor, setPriceOverride,
     setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone, addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,
     setConsultationStatus, removeConsultation, removeClient,

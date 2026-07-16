@@ -4,6 +4,7 @@ import { useAppState } from '../hooks/useAppState.js';
 import { STRINGS } from '../data/translations.js';
 import { DESIGN_LEVELS } from '../data/designLevels.js';
 import { sx } from '../utils/sx.js';
+import ActivityChart from '../components/ActivityChart.jsx';
 
 const inputSm = 'padding:12px 14px;border-radius:10px;border:1px solid oklch(75% 0.02 70);background:var(--surface);font-size:14px;color:var(--text);width:100%;box-sizing:border-box;';
 
@@ -13,13 +14,14 @@ export default function AdminPage() {
     state, setAdminTab, setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone,
     addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,
     getLevelRangeFor, setPriceOverride, setConsultationStatus, removeConsultation, removeClient, setRegistrationStatus,
-    toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts,
+    toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, loadActivityStats,
   } = useAppState();
   const T = STRINGS[state.lang];
   const isAdmin = state.role === 'admin';
 
   useEffect(() => { if (!isAdmin) navigate('/login?intent=admin', { replace: true }); }, [isAdmin, navigate]);
   useEffect(() => { if (isAdmin) loadGenerationCounts(); }, [isAdmin, loadGenerationCounts]);
+  useEffect(() => { if (isAdmin) loadActivityStats(); }, [isAdmin, loadActivityStats]);
   if (!isAdmin) return null;
 
   const tabs = ['overview', 'suppliers', 'pricing', 'consultations', 'clients', 'registrations'];
@@ -38,6 +40,7 @@ export default function AdminPage() {
       </div>
 
       {state.adminTab === 'overview' && (
+        <>
         <div className="nad-grid-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16 }}>
           {[
             { label: T.admin.overview.suppliers, value: state.adminSuppliers.filter((x) => x.status === 'approved').length },
@@ -52,6 +55,8 @@ export default function AdminPage() {
             </div>
           ))}
         </div>
+          <ActivityChart monthly={state.activityStats.monthly} yearly={state.activityStats.yearly} registrations={state.adminRegistrations} loading={state.activityStatsStatus === 'loading' && state.activityStats.monthly.length === 0} />
+        </>
       )}
 
       {state.adminTab === 'suppliers' && (
