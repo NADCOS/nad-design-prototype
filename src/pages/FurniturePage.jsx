@@ -15,7 +15,7 @@ export default function FurniturePage({ headFont }) {
   const navigate = useNavigate();
   const {
     state, setFurnitureTab, openFurnitureDetail, removeFurnitureItem, nextFromFurniture, handleAdminImageChange,
-    loadFurnitureItems, openFurnitureEditor, openNewFurnitureItem, quickSaveFurnitureImage,
+    loadFurnitureItems, openFurnitureEditor, openNewFurnitureItem, quickSaveFurnitureImage, seedFurnitureCatalog,
   } = useAppState();
   const [tab, setTab] = useState(state.furnitureTab || 'sofas');
   const [brokenImageUrls, setBrokenImageUrls] = useState({});
@@ -52,6 +52,13 @@ export default function FurniturePage({ headFont }) {
       {isAdmin && (
         <div style={{ background: 'oklch(94% 0.035 75)', border: '1px solid oklch(78% 0.06 68)', borderRadius: 12, padding: '13px 18px', marginBottom: 20, fontSize: 13, lineHeight: 1.5, color: 'oklch(36% 0.05 60)' }}>
           <strong style={{ fontWeight: 700 }}>Admin Mode.</strong> Use the camera icon on a card to instantly swap its photo, or "{T.common.edit}" to update name, code, supplier, dimensions, price, category and finishes. Changes save straight to the live site.
+        </div>
+      )}
+
+      {isAdmin && isSupabaseConfigured && !remoteReady && !remoteLoading && (
+        <div style={{ background: 'oklch(95% 0.02 230)', border: '1px solid oklch(80% 0.06 230)', borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 13.5, color: 'oklch(35% 0.08 230)' }}>These are sample items — view-only until imported. Import them once to edit or delete individual pieces.</span>
+          <button type="button" onClick={seedFurnitureCatalog} disabled={state.furnitureSaving} style={{ fontSize: 12.5, fontWeight: 600, color: '#fff', background: 'oklch(45% 0.1 230)', border: 'none', borderRadius: 100, padding: '9px 18px', cursor: state.furnitureSaving ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' }}>{state.furnitureSaving ? 'Importing…' : 'Import catalogue to database'}</button>
         </div>
       )}
 

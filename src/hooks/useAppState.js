@@ -5,6 +5,7 @@ import React, { createContext, useContext, useEffect, useRef, useState, useCallb
 import { useNavigate } from 'react-router-dom';
 import { SUPPLIERS } from '../data/suppliers.js';
 import { DESIGN_LEVELS } from '../data/designLevels.js';
+import { FURNITURE_ITEMS } from '../data/furniture.js';
 import { STEP_KEYS } from '../data/navigation.js';
 import { STRINGS } from '../data/translations.js';
 import { getLevelRange, computeCost, computeWarnings } from '../utils/pricing.js';
@@ -625,6 +626,26 @@ export function AppStateProvider({ children }) {
     return result;
   }, [patch, loadFurnitureItems, showToast, state.lang]);
 
+  const seedFurnitureCatalog = useCallback(async () => {
+    patch({ furnitureSaving: true, furnitureSaveError: null });
+    if (isSupabaseConfigured) {
+      const { data: { session } = {} } = await supabase.auth.getSession();
+      if (!session) {
+        patch({ furnitureSaving: false, furnitureSaveError: 'You do not have permission to modify this content.' });
+        return { ok: false };
+      }
+    }
+    const result = await furnitureService.seedFurnitureItems(FURNITURE_ITEMS);
+    if (!result.ok) {
+      patch({ furnitureSaving: false, furnitureSaveError: result.error || 'Could not import the catalogue.' });
+      return result;
+    }
+    await loadFurnitureItems();
+    patch({ furnitureSaving: false });
+    showToast(state.lang === 'ar' ? 'تم استيراد الكتالوج — يمكنك الآن تعديله وحذف عناصره.' : 'Catalogue imported — you can now edit and delete items.');
+    return result;
+  }, [patch, loadFurnitureItems, showToast, state.lang]);
+
   const value = {
     state, patch, showToast,
     toggleTheme, handleAdminImageChange,
@@ -646,7 +667,7 @@ export function AppStateProvider({ children }) {
     generateDesign, regenerate, resetGeneration, downloadPlaceholder, downloadGeneratedImage,
     saveProject, requestConsult, buildWhatsAppLink, setSliderPos,
     loadProjectTypes, openProjectTypeEditor, closeProjectTypeEditor, saveProjectTypeEdit: saveProjectTypeEditFn, quickSaveProjectTypeImage,
-    loadFurnitureItems, openFurnitureEditor, openNewFurnitureItem, closeFurnitureEditor, saveFurnitureItemEdit, deleteFurnitureItemFn, quickSaveFurnitureImage,
+    loadFurnitureItems, openFurnitureEditor, openNewFurnitureItem, closeFurnitureEditor, saveFurnitureItemEdit, deleteFurnitureItemFn, quickSaveFurnitureImage, seedFurnitureCatalog,
     computeCost: () => computeCost(state.selections, state.priceOverrides),
     computeWarnings: () => computeWarnings(state.selections, state.lang),
     getRemainingGenerations,

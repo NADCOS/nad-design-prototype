@@ -114,6 +114,22 @@ export async function deleteFurnitureItem(id, imagePath) {
   return { ok: true };
 }
 
+/** One-time import: inserts the built-in static catalogue as real rows so it becomes admin-editable/deletable. */
+export async function seedFurnitureItems(items) {
+  if (!isSupabaseConfigured) return { ok: false, error: 'Supabase is not configured.' };
+  const rows = items.map((it, i) => ({
+    category: it.category, name: it.name, code: it.code || '', supplier: it.supplier || '',
+    price: it.price || 0, dims: it.dims || '',
+    wood_finish: it.woodFinish ? it.woodFinish[0] : null,
+    fabric: it.fabric ? it.fabric[0] : null,
+    metal: it.metal ? it.metal[0] : null,
+    availability: it.availability || 'inStock', is_active: true, sort_order: i,
+  }));
+  const { data, error } = await supabase.from(FURNITURE_TABLE).insert(rows).select();
+  if (error) return { ok: false, error: friendlyDbError(error) };
+  return { ok: true, data: (data || []).map(attachImageUrl) };
+}
+
 /** Orchestrates create/update: uploads the image (if any) then writes the row. */
 export async function saveFurnitureEdit(id, fields, imageFile, isNew) {
   let uploadedPath = null;
