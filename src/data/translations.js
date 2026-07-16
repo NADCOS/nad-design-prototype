@@ -49,6 +49,12 @@ export const STRINGS = {
       clients: { name: 'Client', email: 'Email', projects: 'Projects', lastActive: 'Last active', remove: 'Remove' },
       registrations: { email: 'Email', phone: 'Phone', date: 'Registered', status: 'Status', pending: 'Pending', verified: 'Verified', verify: 'Verify', markPending: 'Mark pending', empty: 'No visitor registrations yet.', removeDuplicates: 'Remove duplicates', generations: 'Images generated', suspend: 'Suspend', unsuspend: 'Unsuspend', suspended: 'Suspended' },
     },
+    chat: {
+      title: 'NAD Design', status: 'Typically replies within a few hours', placeholder: 'Type a message…', ariaOpen: 'Chat with NAD Design', ariaClose: 'Close chat',
+      welcome: 'Hi! Welcome to NAD Design. How can we help with your project today?',
+      autoReply: 'Thanks for your message — a NAD Design consultant will get back to you shortly.',
+      you: 'You', today: 'Today',
+    },
   },
   ar: {
     brand: 'ناد ديزاين',
@@ -98,6 +104,12 @@ export const STRINGS = {
       consultations: { name: 'العميل', type: 'النوع', online: 'عن بعد', inPerson: 'حضوري', date: 'التاريخ', project: 'نوع المشروع', status: 'الحالة', pending: 'قيد الانتظار', confirmed: 'مؤكد', completed: 'مكتمل', confirm: 'تأكيد', complete: 'وضع علامة مكتمل', remove: 'إزالة' },
       clients: { name: 'العميل', email: 'البريد الإلكتروني', projects: 'المشاريع', lastActive: 'آخر نشاط', remove: 'إزالة' },
       registrations: { email: 'البريد الإلكتروني', phone: 'الهاتف', date: 'تاريخ التسجيل', status: 'الحالة', pending: 'قيد الانتظار', verified: 'موثّق', verify: 'توثيق', markPending: 'إعادة لقيد الانتظار', empty: 'لا توجد تسجيلات زوار بعد.', removeDuplicates: 'إزالة التكرارات', generations: 'الصور المولّدة', suspend: 'إيقاف الحساب', unsuspend: 'إلغاء الإيقاف', suspended: 'موقوف' },
+    },
+    chat: {
+      title: 'ناد ديزاين', status: 'عادةً ما نرد خلال ساعات قليلة', placeholder: 'اكتب رسالة…', ariaOpen: 'الدردشة مع ناد ديزاين', ariaClose: 'إغلاق الدردشة',
+      welcome: 'مرحباً بك في ناد ديزاين! كيف يمكننا مساعدتك في مشروعك اليوم؟',
+      autoReply: 'شكراً على رسالتك — سيتواصل معك أحد مستشاري ناد ديزاين قريباً.',
+      you: 'أنت', today: 'اليوم',
     },
   },
 };
