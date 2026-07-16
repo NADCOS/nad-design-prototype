@@ -95,6 +95,7 @@ export function AppStateProvider({ children }) {
     try { const savedImages = JSON.parse(localStorage.getItem('nad_image_overrides') || '{}'); if (savedImages && typeof savedImages === 'object') patch({ imageOverrides: savedImages }); } catch (e) {}
     try { const savedTheme = localStorage.getItem('nad_theme'); if (savedTheme === 'dark' || savedTheme === 'light') patch({ theme: savedTheme }); } catch (e) {}
     try { const savedRegs = JSON.parse(localStorage.getItem('nad_registrations') || '[]'); if (Array.isArray(savedRegs)) patch({ adminRegistrations: savedRegs }); } catch (e) {}
+    try { const savedSuppliers = JSON.parse(localStorage.getItem('nad_suppliers') || 'null'); if (Array.isArray(savedSuppliers) && savedSuppliers.length) patch({ adminSuppliers: savedSuppliers }); } catch (e) {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -236,22 +237,36 @@ export function AppStateProvider({ children }) {
     const name = s.newSupplierName.trim();
     if (!name) return s;
     const slug = name.toLowerCase().replace(/[^a-z]+/g, '');
+    const nextSuppliers = [...s.adminSuppliers, {
+      id: s.adminSuppliers.reduce((m, x) => Math.max(m, x.id), 0) + 1, name,
+      category: 'Furniture', delivery: '4-6 weeks',
+      website: s.newSupplierWebsite.trim() || ('https://' + slug + '.sa'),
+      email: s.newSupplierEmail.trim() || (slug + '@supplier.sa'),
+      phone: s.newSupplierPhone.trim(),
+      status: 'approved',
+    }];
+    try { localStorage.setItem('nad_suppliers', JSON.stringify(nextSuppliers)); } catch (e) {}
     return {
       ...s,
-      adminSuppliers: [...s.adminSuppliers, {
-        id: s.adminSuppliers.reduce((m, x) => Math.max(m, x.id), 0) + 1, name,
-        category: 'Furniture', delivery: '4-6 weeks',
-        website: s.newSupplierWebsite.trim() || ('https://' + slug + '.sa'),
-        email: s.newSupplierEmail.trim() || (slug + '@supplier.sa'),
-        phone: s.newSupplierPhone.trim(),
-        status: 'approved',
-      }],
+      adminSuppliers: nextSuppliers,
       newSupplierName: '', newSupplierWebsite: '', newSupplierEmail: '', newSupplierPhone: '',
     };
   }), []);
-  const toggleSupplierStatus = useCallback((id) => patch((s) => ({ adminSuppliers: s.adminSuppliers.map((sup) => (sup.id === id ? { ...sup, status: sup.status === 'approved' ? 'hidden' : 'approved' } : sup)) })), [patch]);
-  const removeSupplier = useCallback((id) => patch((s) => ({ adminSuppliers: s.adminSuppliers.filter((sup) => sup.id !== id) })), [patch]);
-  const updateSupplierField = useCallback((id, field, value) => patch((s) => ({ adminSuppliers: s.adminSuppliers.map((sup) => (sup.id === id ? { ...sup, [field]: value } : sup)) })), [patch]);
+  const toggleSupplierStatus = useCallback((id) => setState((s) => {
+    const next = s.adminSuppliers.map((sup) => (sup.id === id ? { ...sup, status: sup.status === 'approved' ? 'hidden' : 'approved' } : sup));
+    try { localStorage.setItem('nad_suppliers', JSON.stringify(next)); } catch (e) {}
+    return { ...s, adminSuppliers: next };
+  }), []);
+  const removeSupplier = useCallback((id) => setState((s) => {
+    const next = s.adminSuppliers.filter((sup) => sup.id !== id);
+    try { localStorage.setItem('nad_suppliers', JSON.stringify(next)); } catch (e) {}
+    return { ...s, adminSuppliers: next };
+  }), []);
+  const updateSupplierField = useCallback((id, field, value) => setState((s) => {
+    const next = s.adminSuppliers.map((sup) => (sup.id === id ? { ...sup, [field]: value } : sup));
+    try { localStorage.setItem('nad_suppliers', JSON.stringify(next)); } catch (e) {}
+    return { ...s, adminSuppliers: next };
+  }), []);
 
   const setConsultationStatus = useCallback((id, status) => patch((s) => ({ adminConsultations: s.adminConsultations.map((c) => (c.id === id ? { ...c, status } : c)) })), [patch]);
   const removeConsultation = useCallback((id) => patch((s) => ({ adminConsultations: s.adminConsultations.filter((c) => c.id !== id) })), [patch]);
