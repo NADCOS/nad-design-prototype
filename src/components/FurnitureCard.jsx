@@ -3,10 +3,10 @@ import EditableImage from './EditableImage.jsx';
 import Hoverable from './Hoverable.jsx';
 
 // Step 5 — one furniture catalogue item card.
-export default function FurnitureCard({ item, priceLabel, addLabel, isAdmin, overrideUrl, onAdminImageChange, editLabel, onOpenDetail, headFont }) {
+export default function FurnitureCard({ item, priceLabel, addLabel, isAdmin, overrideUrl, onAdminImageChange, editLabel, onOpenDetail, headFont, prefillSrc, onImageError, onEditClick, onQuickImageUpload, saving }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: 16, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
-      <EditableImage slotId={'furn-' + item.id} placeholder={item.name} aspect="1/1" isAdmin={isAdmin} overrideUrl={overrideUrl} onAdminImageChange={onAdminImageChange} editLabel={editLabel} />
+      <EditableImage slotId={'furn-' + item.id} placeholder={item.name} prefillSrc={prefillSrc} isAdmin={isAdmin} overrideUrl={overrideUrl} onAdminImageChange={onAdminImageChange} editLabel={editLabel} stopClickPropagation onEditClick={onEditClick} onImageError={onImageError} onQuickImageUpload={onQuickImageUpload} saving={saving} />
       <div style={{ padding: '16px 16px 16px 0', display: 'flex', flexDirection: 'column' }}>
         <div style={{ fontFamily: headFont, fontSize: 17, color: 'var(--text)', marginBottom: 4 }}>{item.name}</div>
         <div style={{ fontSize: 11.5, color: 'var(--text-2)', fontFamily: 'ui-monospace,monospace', marginBottom: 8 }}>{item.code} · {item.supplier}</div>

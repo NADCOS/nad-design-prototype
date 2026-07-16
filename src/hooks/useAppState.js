@@ -13,6 +13,7 @@ import { buildStructuredPrompt } from '../utils/promptBuilder.js';
 import { AI_GENERATION_CONFIG } from '../config/aiGeneration.js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
 import * as projectTypesService from '../services/projectTypesService.js';
+import * as furnitureService from '../services/furnitureService.js';
 
 const initialSelections = {
   projectType: null,
@@ -85,6 +86,8 @@ export function AppStateProvider({ children }) {
     generationAspectRatio: AI_GENERATION_CONFIG.defaultAspectRatio, generationImageSize: AI_GENERATION_CONFIG.defaultImageSize, allowFullRedesign: false,
     projectTypesRemote: [], projectTypesStatus: 'idle', projectTypesError: null,
     editingProjectType: null, projectTypeSaving: false, projectTypeSaveError: null, projectTypeSaveSuccess: false,
+    furnitureRemote: [], furnitureStatus: 'idle', furnitureError: null,
+    editingFurnitureItem: null, furnitureItemIsNew: false, furnitureSaving: false, furnitureSaveError: null, furnitureSaveSuccess: false,
   });
   const toastTimer = useRef(null);
 
@@ -542,6 +545,86 @@ export function AppStateProvider({ children }) {
     return result;
   }, [patch, loadProjectTypes]);
 
+  const loadFurnitureItems = useCallback(async () => {
+    patch({ furnitureStatus: 'loading', furnitureError: null });
+    const result = await furnitureService.getFurnitureItems();
+    if (result.ok) patch({ furnitureRemote: result.data, furnitureStatus: 'loaded', furnitureError: null });
+    else patch({ furnitureStatus: 'error', furnitureError: result.error || 'Could not load furniture items.' });
+  }, [patch]);
+
+  const openFurnitureEditor = useCallback((row) => patch({ editingFurnitureItem: row, furnitureItemIsNew: false, furnitureSaveError: null, furnitureSaveSuccess: false }), [patch]);
+  const openNewFurnitureItem = useCallback((categoryKey) => patch({
+    editingFurnitureItem: { category: categoryKey, name: '', code: '', supplier: '', price: 0, dims: '', wood_finish: '', fabric: '', metal: '', availability: 'inStock', is_active: true, sort_order: 0 },
+    furnitureItemIsNew: true, furnitureSaveError: null, furnitureSaveSuccess: false,
+  }), [patch]);
+  const closeFurnitureEditor = useCallback(() => {
+    if (state.furnitureSaving) return;
+    patch({ editingFurnitureItem: null, furnitureSaveError: null, furnitureSaveSuccess: false });
+  }, [patch, state.furnitureSaving]);
+
+  const saveFurnitureItemEdit = useCallback(async (id, fields, imageFile, isNew) => {
+    patch({ furnitureSaving: true, furnitureSaveError: null, furnitureSaveSuccess: false });
+    if (isSupabaseConfigured) {
+      const { data: { session } = {} } = await supabase.auth.getSession();
+      if (!session) {
+        patch({ furnitureSaving: false, furnitureSaveError: 'You do not have permission to modify this content.' });
+        return { ok: false };
+      }
+    }
+    const result = await furnitureService.saveFurnitureEdit(id, fields, imageFile, isNew);
+    if (!result.ok) {
+      patch({ furnitureSaving: false, furnitureSaveError: result.error || 'Something went wrong saving your changes. Please try again.' });
+      return result;
+    }
+    await loadFurnitureItems();
+    patch({ furnitureSaving: false, furnitureSaveSuccess: true });
+    setTimeout(() => patch((s) => (s.editingFurnitureItem ? { editingFurnitureItem: null, furnitureSaveSuccess: false } : {})), 900);
+    return result;
+  }, [patch, loadFurnitureItems]);
+
+  const deleteFurnitureItemFn = useCallback(async (row) => {
+    if (!row || !row.id) return { ok: false };
+    patch({ furnitureSaving: true, furnitureSaveError: null });
+    if (isSupabaseConfigured) {
+      const { data: { session } = {} } = await supabase.auth.getSession();
+      if (!session) {
+        patch({ furnitureSaving: false, furnitureSaveError: 'You do not have permission to modify this content.' });
+        return { ok: false };
+      }
+    }
+    const result = await furnitureService.deleteFurnitureItem(row.id, row.image_path);
+    if (!result.ok) {
+      patch({ furnitureSaving: false, furnitureSaveError: result.error || 'Could not delete this item.' });
+      return result;
+    }
+    await loadFurnitureItems();
+    patch({ furnitureSaving: false, editingFurnitureItem: null });
+    return result;
+  }, [patch, loadFurnitureItems]);
+
+  const quickSaveFurnitureImage = useCallback(async (row, imageFile) => {
+    if (!row || !imageFile) return { ok: false };
+    patch({ furnitureSaving: true, furnitureSaveError: null });
+    if (isSupabaseConfigured) {
+      const { data: { session } = {} } = await supabase.auth.getSession();
+      if (!session) {
+        patch({ furnitureSaving: false, furnitureSaveError: 'You do not have permission to modify this content.' });
+        showToast(state.lang === 'ar' ? 'ليست لديك صلاحية لتعديل هذا المحتوى.' : 'You do not have permission to modify this content.');
+        return { ok: false };
+      }
+    }
+    const result = await furnitureService.saveFurnitureEdit(row.id, {}, imageFile, false);
+    if (!result.ok) {
+      patch({ furnitureSaving: false, furnitureSaveError: result.error || null });
+      showToast(result.error || (state.lang === 'ar' ? 'تعذّر حفظ الصورة.' : 'Could not save the image.'));
+      return result;
+    }
+    await loadFurnitureItems();
+    patch({ furnitureSaving: false });
+    showToast(state.lang === 'ar' ? 'تم تحديث الصورة ونشرها على الموقع.' : 'Image updated — now live on the site.');
+    return result;
+  }, [patch, loadFurnitureItems, showToast, state.lang]);
+
   const value = {
     state, patch, showToast,
     toggleTheme, handleAdminImageChange,
@@ -563,6 +646,7 @@ export function AppStateProvider({ children }) {
     generateDesign, regenerate, resetGeneration, downloadPlaceholder, downloadGeneratedImage,
     saveProject, requestConsult, buildWhatsAppLink, setSliderPos,
     loadProjectTypes, openProjectTypeEditor, closeProjectTypeEditor, saveProjectTypeEdit: saveProjectTypeEditFn, quickSaveProjectTypeImage,
+    loadFurnitureItems, openFurnitureEditor, openNewFurnitureItem, closeFurnitureEditor, saveFurnitureItemEdit, deleteFurnitureItemFn, quickSaveFurnitureImage,
     computeCost: () => computeCost(state.selections, state.priceOverrides),
     computeWarnings: () => computeWarnings(state.selections, state.lang),
     getRemainingGenerations,

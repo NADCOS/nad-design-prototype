@@ -24,3 +24,4 @@ if (!isSupabaseConfigured && import.meta.env.DEV) {
 
 export const PROJECT_TYPES_TABLE = 'project_types';
 export const PROJECT_IMAGES_BUCKET = 'project-images';
+export const FURNITURE_TABLE = 'furniture_items';
