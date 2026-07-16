@@ -47,7 +47,7 @@ export const STRINGS = {
       pricing: { level: 'Design level', min: 'Min SAR / m²', max: 'Max SAR / m²', note: 'Updates the price range clients see across the site in real time.' },
       consultations: { name: 'Client', type: 'Type', online: 'Online', inPerson: 'In-person', date: 'Date', project: 'Project type', status: 'Status', pending: 'Pending', confirmed: 'Confirmed', completed: 'Completed', confirm: 'Confirm', complete: 'Mark complete', remove: 'Remove' },
       clients: { name: 'Client', email: 'Email', projects: 'Projects', lastActive: 'Last active', remove: 'Remove' },
-      registrations: { email: 'Email', phone: 'Phone', date: 'Registered', status: 'Status', pending: 'Pending', verified: 'Verified', verify: 'Verify', markPending: 'Mark pending', empty: 'No visitor registrations yet.' },
+      registrations: { email: 'Email', phone: 'Phone', date: 'Registered', status: 'Status', pending: 'Pending', verified: 'Verified', verify: 'Verify', markPending: 'Mark pending', empty: 'No visitor registrations yet.', removeDuplicates: 'Remove duplicates', generations: 'Images generated', suspend: 'Suspend', unsuspend: 'Unsuspend', suspended: 'Suspended' },
     },
   },
   ar: {
@@ -97,7 +97,7 @@ export const STRINGS = {
       pricing: { level: 'مستوى التصميم', min: 'الحد الأدنى (ريال/م²)', max: 'الحد الأقصى (ريال/م²)', note: 'يحدّث نطاق السعر الذي يراه العملاء في الموقع فوراً.' },
       consultations: { name: 'العميل', type: 'النوع', online: 'عن بعد', inPerson: 'حضوري', date: 'التاريخ', project: 'نوع المشروع', status: 'الحالة', pending: 'قيد الانتظار', confirmed: 'مؤكد', completed: 'مكتمل', confirm: 'تأكيد', complete: 'وضع علامة مكتمل', remove: 'إزالة' },
       clients: { name: 'العميل', email: 'البريد الإلكتروني', projects: 'المشاريع', lastActive: 'آخر نشاط', remove: 'إزالة' },
-      registrations: { email: 'البريد الإلكتروني', phone: 'الهاتف', date: 'تاريخ التسجيل', status: 'الحالة', pending: 'قيد الانتظار', verified: 'موثّق', verify: 'توثيق', markPending: 'إعادة لقيد الانتظار', empty: 'لا توجد تسجيلات زوار بعد.' },
+      registrations: { email: 'البريد الإلكتروني', phone: 'الهاتف', date: 'تاريخ التسجيل', status: 'الحالة', pending: 'قيد الانتظار', verified: 'موثّق', verify: 'توثيق', markPending: 'إعادة لقيد الانتظار', empty: 'لا توجد تسجيلات زوار بعد.', removeDuplicates: 'إزالة التكرارات', generations: 'الصور المولّدة', suspend: 'إيقاف الحساب', unsuspend: 'إلغاء الإيقاف', suspended: 'موقوف' },
     },
   },
 };

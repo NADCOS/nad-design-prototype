@@ -13,11 +13,13 @@ export default function AdminPage() {
     state, setAdminTab, setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone,
     addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,
     getLevelRangeFor, setPriceOverride, setConsultationStatus, removeConsultation, removeClient, setRegistrationStatus,
+    toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts,
   } = useAppState();
   const T = STRINGS[state.lang];
   const isAdmin = state.role === 'admin';
 
   useEffect(() => { if (!isAdmin) navigate('/login?intent=admin', { replace: true }); }, [isAdmin, navigate]);
+  useEffect(() => { if (isAdmin) loadGenerationCounts(); }, [isAdmin, loadGenerationCounts]);
   if (!isAdmin) return null;
 
   const tabs = ['overview', 'suppliers', 'pricing', 'consultations', 'clients', 'registrations'];
@@ -154,18 +156,26 @@ export default function AdminPage() {
       {state.adminTab === 'registrations' && (
         <>
           {registrationsSorted.length === 0 && <div style={{ fontSize: 13.5, color: 'var(--text-2)', padding: '20px 0' }}>{T.admin.registrations.empty}</div>}
+          {registrationsSorted.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 14 }}>
+              <button type="button" style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text)', cursor: 'pointer', whiteSpace: 'nowrap', background: 'transparent', border: '1px solid var(--border)', borderRadius: 100, padding: '9px 18px' }} onClick={removeDuplicateRegistrations}>{T.admin.registrations.removeDuplicates}</button>
+            </div>
+          )}
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflowX: 'auto' }}>
             {registrationsSorted.map((rg) => {
-              const statusStyle = 'font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;background:' + (rg.status === 'verified' ? 'oklch(90% 0.06 145)' : 'oklch(92% 0.05 80)') + ';color:' + (rg.status === 'verified' ? 'oklch(35% 0.08 145)' : 'oklch(45% 0.08 70)') + ';';
+              const statusStyle = 'font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;background:' + (rg.suspended ? 'oklch(90% 0.10 30)' : rg.status === 'verified' ? 'oklch(90% 0.06 145)' : 'oklch(92% 0.05 80)') + ';color:' + (rg.suspended ? 'oklch(38% 0.14 30)' : rg.status === 'verified' ? 'oklch(35% 0.08 145)' : 'oklch(45% 0.08 70)') + ';';
+              const genCount = state.generationCounts[((rg.email || rg.phone || '').trim().toLowerCase())] || 0;
               return (
-                <div key={rg.id} style={{ display: 'grid', gridTemplateColumns: '1.4fr 1.1fr 1fr auto auto', minWidth: 600, gap: 14, alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
+                <div key={rg.id} style={{ display: 'grid', gridTemplateColumns: '1.4fr 1.1fr 1fr auto auto auto', minWidth: 700, gap: 14, alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
                   <div style={{ fontSize: 13, color: 'var(--text)', fontFamily: 'ui-monospace,monospace' }}>{rg.email || '\u2014'}</div>
                   <div style={{ fontSize: 13, color: 'var(--text)', fontFamily: 'ui-monospace,monospace' }}>{rg.phone || '\u2014'}</div>
                   <div style={{ fontSize: 12.5, color: 'var(--text-2)' }}>{rg.registeredAt}</div>
-                  <span style={sx(statusStyle)}>{rg.status === 'verified' ? T.admin.registrations.verified : T.admin.registrations.pending}</span>
-                  <span style={{ display: 'flex', gap: 12 }}>
-                    {rg.status !== 'verified' && <button type="button" style={{ fontSize: 12, fontWeight: 600, color: 'oklch(35% 0.08 145)', cursor: 'pointer', whiteSpace: 'nowrap', background: 'none', border: 'none', padding: 0 }} onClick={() => setRegistrationStatus(rg.id, 'verified')}>{T.admin.registrations.verify}</button>}
-                    {rg.status === 'verified' && <button type="button" style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer', whiteSpace: 'nowrap', background: 'none', border: 'none', padding: 0 }} onClick={() => setRegistrationStatus(rg.id, 'pending')}>{T.admin.registrations.markPending}</button>}
+                  <div style={{ fontSize: 12.5, color: 'var(--text-2)' }}>{T.admin.registrations.generations}: <strong style={{ color: 'var(--text)' }}>{genCount}</strong></div>
+                  <span style={sx(statusStyle)}>{rg.suspended ? T.admin.registrations.suspended : rg.status === 'verified' ? T.admin.registrations.verified : T.admin.registrations.pending}</span>
+                  <span style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    {!rg.suspended && rg.status !== 'verified' && <button type="button" style={{ fontSize: 12, fontWeight: 600, color: 'oklch(35% 0.08 145)', cursor: 'pointer', whiteSpace: 'nowrap', background: 'none', border: 'none', padding: 0 }} onClick={() => setRegistrationStatus(rg.id, 'verified')}>{T.admin.registrations.verify}</button>}
+                    {!rg.suspended && rg.status === 'verified' && <button type="button" style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer', whiteSpace: 'nowrap', background: 'none', border: 'none', padding: 0 }} onClick={() => setRegistrationStatus(rg.id, 'pending')}>{T.admin.registrations.markPending}</button>}
+                    <button type="button" style={{ fontSize: 12, fontWeight: 600, color: 'oklch(50% 0.12 30)', cursor: 'pointer', whiteSpace: 'nowrap', background: 'none', border: 'none', padding: 0 }} onClick={() => toggleRegistrationSuspended(rg.id)}>{rg.suspended ? T.admin.registrations.unsuspend : T.admin.registrations.suspend}</button>
                   </span>
                 </div>
               );

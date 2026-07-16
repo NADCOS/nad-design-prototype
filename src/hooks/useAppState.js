@@ -76,6 +76,7 @@ export function AppStateProvider({ children }) {
       { id: 3, name: 'Khalid Al-Dossari', email: 'khalid.d@example.com', projects: 3, lastActive: '2026-07-01' },
     ],
     adminRegistrations: [],
+    generationCounts: {},
     guestEmail: '', guestPhone: '', guestFormError: '', loginIntent: null,
     guestPanelMode: 'signup', guestLoginIdentifier: '', guestLoginError: '',
     currentGuestIdentifier: null,
@@ -222,6 +223,30 @@ export function AppStateProvider({ children }) {
     try { localStorage.setItem('nad_registrations', JSON.stringify(next)); } catch (e) {}
     return { ...s, adminRegistrations: next };
   }), []);
+  const toggleRegistrationSuspended = useCallback((id) => setState((s) => {
+    const next = s.adminRegistrations.map((r) => (r.id === id ? { ...r, suspended: !r.suspended } : r));
+    try { localStorage.setItem('nad_registrations', JSON.stringify(next)); } catch (e) {}
+    return { ...s, adminRegistrations: next };
+  }), []);
+  const removeDuplicateRegistrations = useCallback(() => setState((s) => {
+    const bestByKey = new Map();
+    const noKey = [];
+    s.adminRegistrations.forEach((r) => {
+      const key = (r.email || r.phone || '').trim().toLowerCase();
+      if (!key) { noKey.push(r); return; }
+      const score = (r.status === 'verified' ? 1 : 0) * 1e15 + new Date(r.registeredAt || 0).getTime();
+      const existing = bestByKey.get(key);
+      if (!existing || score > existing.score) bestByKey.set(key, { r, score });
+    });
+    const next = [...Array.from(bestByKey.values()).map((x) => x.r), ...noKey];
+    try { localStorage.setItem('nad_registrations', JSON.stringify(next)); } catch (e) {}
+    return { ...s, adminRegistrations: next };
+  }), []);
+  const loadGenerationCounts = useCallback(() => {
+    fetch('/api/admin-generation-counts').then((r) => r.json()).then((data) => {
+      if (data && data.success) patch({ generationCounts: data.counts || {} });
+    }).catch(() => {});
+  }, [patch]);
 
   const getLevelRangeFor = useCallback((key) => getLevelRange(key, state.priceOverrides), [state.priceOverrides]);
   const setPriceOverride = useCallback((key, field) => (e) => {
@@ -523,7 +548,7 @@ export function AppStateProvider({ children }) {
     toggleTheme, handleAdminImageChange,
     goToLogin, setLoginPasscode, setGuestEmail, setGuestPhone, registerGuest, loginAsAdmin, logout,
     setGuestPanelMode, setGuestLoginIdentifier, loginAsGuest,
-    goToAdmin, setAdminTab, setRegistrationStatus,
+    goToAdmin, setAdminTab, setRegistrationStatus, toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts,
     getLevelRangeFor, setPriceOverride,
     setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone, addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,
     setConsultationStatus, removeConsultation, removeClient,
