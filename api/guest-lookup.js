@@ -2,7 +2,7 @@
 // without exposing the full registrations table to the browser. The table
 // has no client-readable RLS policy; only this service-role lookup can query
 // it, and it only ever returns the ONE matching row, never the whole list.
-import { getSupabaseAdmin } from './services/supabaseAdmin.js';
+import { getSupabaseAdmin } from './_lib/supabaseAdmin.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') { res.status(405).json({ success: false, error: 'Only POST requests are supported.' }); return; }

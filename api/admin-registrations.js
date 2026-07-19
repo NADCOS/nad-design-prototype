@@ -15,8 +15,8 @@
 //     created_at timestamptz not null default now()
 //   );
 //   alter table registrations enable row level security;
-import { getSupabaseAdmin } from './services/supabaseAdmin.js';
-import { requireAdmin } from './services/verifyAdmin.js';
+import { getSupabaseAdmin } from './_lib/supabaseAdmin.js';
+import { requireAdmin } from './_lib/verifyAdmin.js';
 
 function toClient(row) {
   return { id: row.id, email: row.email || '', phone: row.phone || '', registeredAt: row.registered_at, status: row.status, suspended: row.suspended };

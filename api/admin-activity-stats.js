@@ -1,7 +1,7 @@
 // NAD Design — GET /api/admin-activity-stats
 // Aggregates generation_logs by month (last 12) and year (last 5) so the
 // admin Overview graph has real, site-wide counts (not per-browser data).
-import { getSupabaseAdmin } from './services/supabaseAdmin.js';
+import { getSupabaseAdmin } from './_lib/supabaseAdmin.js';
 
 function monthKey(d) { return d.toISOString().slice(0, 7); }
 function yearKey(d) { return String(d.getUTCFullYear()); }

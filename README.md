@@ -82,9 +82,11 @@ nad-design/
 ├── public/
 │   └── assets/            # logo, hero photo, prefilled material textures
 ├── api/                    # Vercel serverless functions (server-only — never bundled into the client)
-│   ├── generate-design.js       # POST /api/generate-design — validates requests, calls the service below
-│   └── services/
-│       └── nanoBanana.js        # only file that imports @google/genai and reads GEMINI_API_KEY
+│   ├── generate-design.js, admin-*.js, guest-lookup.js   # one route per file
+│   └── _lib/                    # shared helpers only — underscore prefix keeps Vercel from
+│       ├── nanoBanana.js        #   counting these as separate Serverless Functions (12-function
+│       ├── supabaseAdmin.js     #   cap on the Hobby plan)
+│       └── verifyAdmin.js
 └── src/
     ├── main.jsx             # React Router + app root
     ├── App.jsx              # route table + theme/RTL shell (header, WhatsApp button, toast)
@@ -128,7 +130,7 @@ The AI Generation page calls `POST /api/generate-design`, a Vercel serverless fu
    - `NANO_BANANA_MODEL` = `gemini-3.1-flash-image` (optional — this is the default if unset)
 3. Locally, copy `.env.example` to `.env` and fill in the same two variables to test AI generation on `localhost` (Vite dev server proxies `/api/*` to the same serverless functions when using `vercel dev`; plain `vite dev` will show the "not configured" error for `/api/generate-design` since it doesn't run serverless functions — use `vercel dev` locally if you want to test real generation before deploying).
 
-**Never** prefix these with `VITE_` — anything prefixed `VITE_` is inlined into the public JS bundle. `GEMINI_API_KEY` must only ever be read inside `api/services/nanoBanana.js`.
+**Never** prefix these with `VITE_` — anything prefixed `VITE_` is inlined into the public JS bundle. `GEMINI_API_KEY` must only ever be read inside `api/_lib/nanoBanana.js`.
 
 ### Current mock/demo states
 
@@ -139,7 +141,7 @@ The AI Generation page calls `POST /api/generate-design`, a Vercel serverless fu
 ### Remaining steps for full production readiness
 
 - Add the real `GEMINI_API_KEY` in Vercel once you're ready to generate real images (see above).
-- Replace the client-side session generation cap with real per-user credits (Supabase auth + a `generations` table), and move image storage from base64 responses to Supabase Storage — `api/services/nanoBanana.js` already returns a single `imageDataUrl` field so this swap won't require frontend changes.
+- Replace the client-side session generation cap with real per-user credits (Supabase auth + a `generations` table), and move image storage from base64 responses to Supabase Storage — `api/_lib/nanoBanana.js` already returns a single `imageDataUrl` field so this swap won't require frontend changes.
 - Replace the `mailto:` guest-registration notification (`src/hooks/useAppState.js` → `registerGuest`) with a real transactional email/webhook.
 - Move mock catalogue data (`src/data/*.js`) to a real backend/CMS if suppliers, pricing, or products need to be managed outside code.
 
@@ -147,10 +149,10 @@ The AI Generation page calls `POST /api/generate-design`, a Vercel serverless fu
 
 | Variable | Where it's read | Notes |
 |---|---|---|
-| `GEMINI_API_KEY` | `api/services/nanoBanana.js` only | Server-only secret. Never in frontend code, never `.env.example`. |
-| `NANO_BANANA_MODEL` | `api/services/nanoBanana.js` only | Optional — defaults to `gemini-3.1-flash-image`. |
+| `GEMINI_API_KEY` | `api/_lib/nanoBanana.js` only | Server-only secret. Never in frontend code, never `.env.example`. |
+| `NANO_BANANA_MODEL` | `api/_lib/nanoBanana.js` only | Optional — defaults to `gemini-3.1-flash-image`. |
 | `ADMIN_PASSCODE` | `api/admin-login.js` only | Server-only. Without it, admin login always fails (previously the passcode was hardcoded client-side). |
-| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | `api/services/supabaseAdmin.js` only | Server-only. Bypasses RLS for `generation_logs`, `registrations`, and `suppliers` — see `api/admin-registrations.js` and `api/admin-suppliers.js` for the table SQL. |
+| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | `api/_lib/supabaseAdmin.js` only | Server-only. Bypasses RLS for `generation_logs`, `registrations`, and `suppliers` — see `api/admin-registrations.js` and `api/admin-suppliers.js` for the table SQL. |
 
 ### Registrations & suppliers are now Supabase-backed
 

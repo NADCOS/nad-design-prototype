@@ -1,7 +1,7 @@
 // NAD Design — GET /api/admin-generation-counts
 // Returns { [identifier]: count } aggregated from generation_logs so the admin
 // dashboard can show how many images each registered guest has generated.
-import { getSupabaseAdmin } from './services/supabaseAdmin.js';
+import { getSupabaseAdmin } from './_lib/supabaseAdmin.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

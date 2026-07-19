@@ -25,8 +25,8 @@
 //     ('Noir Metal Works', 'Flooring & Stone', '6-8 weeks', 'https://noirmetalworks.sa', 'noirmetalworks@supplier.sa', '+966 515 255 4435', 'approved', 5),
 //     ('Linen & Co.', 'Furniture', '2-3 weeks', 'https://linenco.sa', 'linenco@supplier.sa', '+966 516 266 4522', 'approved', 6),
 //     ('Riyadh Stone Co.', 'Lighting', '4-6 weeks', 'https://riyadhstoneco.sa', 'riyadhstoneco@supplier.sa', '+966 517 277 4609', 'approved', 7);
-import { getSupabaseAdmin } from './services/supabaseAdmin.js';
-import { requireAdmin } from './services/verifyAdmin.js';
+import { getSupabaseAdmin } from './_lib/supabaseAdmin.js';
+import { requireAdmin } from './_lib/verifyAdmin.js';
 
 function toClient(row) {
   return { id: row.id, name: row.name, category: row.category, delivery: row.delivery, website: row.website || '', email: row.email || '', phone: row.phone || '', status: row.status };
