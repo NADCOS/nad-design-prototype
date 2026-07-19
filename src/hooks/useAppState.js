@@ -16,6 +16,15 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
 import * as projectTypesService from '../services/projectTypesService.js';
 import * as furnitureService from '../services/furnitureService.js';
 
+async function getAdminAuthHeaders() {
+  if (!isSupabaseConfigured) return {};
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = data && data.session && data.session.access_token;
+    return token ? { Authorization: 'Bearer ' + token } : {};
+  } catch (e) { return {}; }
+}
+
 const initialSelections = {
   projectType: null,
   designLevel: null,
@@ -51,7 +60,7 @@ export function AppStateProvider({ children }) {
     loginError: '',
     adminTab: 'overview',
     priceOverrides: {},
-    adminSuppliers: SUPPLIERS.map((name, i) => {
+    adminSuppliers: isSupabaseConfigured ? [] : SUPPLIERS.map((name, i) => {
       const slug = name.toLowerCase().replace(/[^a-z]+/g, '');
       return {
         id: i, name,
@@ -100,8 +109,10 @@ export function AppStateProvider({ children }) {
     try { const savedIdentifier = localStorage.getItem('nad_guest_identifier'); if (savedIdentifier) patch({ currentGuestIdentifier: savedIdentifier }); } catch (e) {}
     try { const savedImages = JSON.parse(localStorage.getItem('nad_image_overrides') || '{}'); if (savedImages && typeof savedImages === 'object') patch({ imageOverrides: savedImages }); } catch (e) {}
     try { const savedTheme = localStorage.getItem('nad_theme'); if (savedTheme === 'dark' || savedTheme === 'light') patch({ theme: savedTheme }); } catch (e) {}
-    try { const savedRegs = JSON.parse(localStorage.getItem('nad_registrations') || '[]'); if (Array.isArray(savedRegs)) patch({ adminRegistrations: savedRegs }); } catch (e) {}
-    try { const savedSuppliers = JSON.parse(localStorage.getItem('nad_suppliers') || 'null'); if (Array.isArray(savedSuppliers) && savedSuppliers.length) patch({ adminSuppliers: savedSuppliers }); } catch (e) {}
+    if (!isSupabaseConfigured) {
+      try { const savedRegs = JSON.parse(localStorage.getItem('nad_registrations') || '[]'); if (Array.isArray(savedRegs)) patch({ adminRegistrations: savedRegs }); } catch (e) {}
+      try { const savedSuppliers = JSON.parse(localStorage.getItem('nad_suppliers') || 'null'); if (Array.isArray(savedSuppliers) && savedSuppliers.length) patch({ adminSuppliers: savedSuppliers }); } catch (e) {}
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -140,41 +151,57 @@ export function AppStateProvider({ children }) {
   // Returning guests: look up their email/phone among existing registrations
   // (signed up before, verified or not) and sign them straight in — no need
   // to fill out the registration form again.
-  const loginAsGuest = useCallback(() => {
-    setState((s) => {
-      const identifier = s.guestLoginIdentifier.trim().toLowerCase();
-      if (!identifier) {
-        return { ...s, guestLoginError: s.lang === 'ar' ? STRINGS.ar.login.guestFormError : STRINGS.en.login.guestFormError };
-      }
-      const match = s.adminRegistrations.find((r) => (r.email && r.email.toLowerCase() === identifier) || (r.phone && r.phone.replace(/\s+/g, '') === identifier.replace(/\s+/g, '')));
-      if (!match) {
-        return { ...s, guestLoginError: s.lang === 'ar' ? STRINGS.ar.login.guestLoginNotFound : STRINGS.en.login.guestLoginNotFound };
-      }
-      try { localStorage.setItem('nad_role', 'guest'); } catch (e) {}
-      try { localStorage.setItem('nad_guest_identifier', match.email || match.phone || ''); } catch (e) {}
-      const idx = STEP_KEYS.indexOf(s.loginIntent);
-      setTimeout(() => {
-        showToast(s.lang === 'ar' ? STRINGS.ar.login.guestWelcomeBack : STRINGS.en.login.guestWelcomeBack);
-        navigate(s.loginIntent ? '/design/' + s.loginIntent : '/');
-      }, 0);
-      return {
-        ...s, role: 'guest', currentGuestIdentifier: match.email || match.phone || null,
-        maxStepIndex: idx >= 0 ? Math.max(s.maxStepIndex, idx) : s.maxStepIndex,
-        loginIntent: null, guestLoginIdentifier: '', guestLoginError: '',
-      };
-    });
-  }, [navigate, showToast]);
+  const loginAsGuest = useCallback(async () => {
+    const identifier = state.guestLoginIdentifier.trim().toLowerCase();
+    const lang = state.lang;
+    if (!identifier) {
+      patch({ guestLoginError: lang === 'ar' ? STRINGS.ar.login.guestFormError : STRINGS.en.login.guestFormError });
+      return;
+    }
+    let match = null;
+    if (isSupabaseConfigured) {
+      try {
+        const res = await fetch('/api/guest-lookup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifier }) });
+        const data = await res.json();
+        if (data && data.success && data.found) match = { email: data.email, phone: data.phone };
+      } catch (e) {}
+    } else {
+      match = state.adminRegistrations.find((r) => (r.email && r.email.toLowerCase() === identifier) || (r.phone && r.phone.replace(/\s+/g, '') === identifier.replace(/\s+/g, ''))) || null;
+    }
+    if (!match) {
+      patch({ guestLoginError: lang === 'ar' ? STRINGS.ar.login.guestLoginNotFound : STRINGS.en.login.guestLoginNotFound });
+      return;
+    }
+    try { localStorage.setItem('nad_role', 'guest'); } catch (e) {}
+    try { localStorage.setItem('nad_guest_identifier', match.email || match.phone || ''); } catch (e) {}
+    const idx = STEP_KEYS.indexOf(state.loginIntent);
+    patch((s) => ({
+      role: 'guest', currentGuestIdentifier: match.email || match.phone || null,
+      maxStepIndex: idx >= 0 ? Math.max(s.maxStepIndex, idx) : s.maxStepIndex,
+      loginIntent: null, guestLoginIdentifier: '', guestLoginError: '',
+    }));
+    showToast(lang === 'ar' ? STRINGS.ar.login.guestWelcomeBack : STRINGS.en.login.guestWelcomeBack);
+    navigate(state.loginIntent ? '/design/' + state.loginIntent : '/');
+  }, [state.guestLoginIdentifier, state.lang, state.adminRegistrations, state.loginIntent, patch, navigate, showToast]);
 
-  const registerGuest = useCallback(() => {
+  const registerGuest = useCallback(async () => {
+    const email = state.guestEmail.trim();
+    const phone = state.guestPhone.trim();
+    if (!email && !phone) {
+      patch({ guestFormError: state.lang === 'ar' ? STRINGS.ar.login.guestFormError : STRINGS.en.login.guestFormError });
+      return;
+    }
+    let reg = { id: Date.now(), email, phone, registeredAt: new Date().toISOString().slice(0, 10), status: 'pending' };
+    if (isSupabaseConfigured) {
+      try {
+        const res = await fetch('/api/admin-registrations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, phone }) });
+        const data = await res.json();
+        if (data && data.success && data.registration) reg = data.registration;
+      } catch (e) {}
+    }
     setState((s) => {
-      const email = s.guestEmail.trim();
-      const phone = s.guestPhone.trim();
-      if (!email && !phone) {
-        return { ...s, guestFormError: s.lang === 'ar' ? STRINGS.ar.login.guestFormError : STRINGS.en.login.guestFormError };
-      }
-      const reg = { id: Date.now(), email, phone, registeredAt: new Date().toISOString().slice(0, 10), status: 'pending' };
       const nextRegs = [...s.adminRegistrations, reg];
-      try { localStorage.setItem('nad_registrations', JSON.stringify(nextRegs)); } catch (e) {}
+      if (!isSupabaseConfigured) { try { localStorage.setItem('nad_registrations', JSON.stringify(nextRegs)); } catch (e) {} }
       try { localStorage.setItem('nad_role', 'guest'); } catch (e) {}
       try { localStorage.setItem('nad_guest_identifier', email || phone || ''); } catch (e) {}
       const idx = STEP_KEYS.indexOf(s.loginIntent);
@@ -195,21 +222,25 @@ export function AppStateProvider({ children }) {
         loginIntent: null, guestEmail: '', guestPhone: '', guestFormError: '',
       };
     });
-  }, [navigate, showToast]);
+  }, [state.guestEmail, state.guestPhone, state.lang, state.loginIntent, patch, navigate, showToast]);
 
-  const loginAsAdmin = useCallback(() => {
-    setState((s) => {
-      if (s.loginPasscode === 'Drive@2424') {
+  const loginAsAdmin = useCallback(async () => {
+    const passcode = state.loginPasscode;
+    const lang = state.lang;
+    const loginIntent = state.loginIntent;
+    try {
+      const res = await fetch('/api/admin-login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passcode }) });
+      const data = await res.json();
+      if (data && data.success) {
         try { localStorage.setItem('nad_role', 'admin'); } catch (e) {}
-        if (isSupabaseConfigured) {
-          supabase.auth.signInAnonymously().catch(() => {});
-        }
-        setTimeout(() => navigate(s.loginIntent ? '/design/' + s.loginIntent : '/admin'), 0);
-        return { ...s, role: 'admin', loginError: '', loginPasscode: '', loginIntent: null };
+        if (isSupabaseConfigured) { try { await supabase.auth.signInAnonymously(); } catch (e) {} }
+        patch({ role: 'admin', loginError: '', loginPasscode: '', loginIntent: null });
+        navigate(loginIntent ? '/design/' + loginIntent : '/admin');
+        return;
       }
-      return { ...s, loginError: s.lang === 'ar' ? STRINGS.ar.login.error : STRINGS.en.login.error };
-    });
-  }, [navigate]);
+    } catch (e) {}
+    patch({ loginError: lang === 'ar' ? STRINGS.ar.login.error : STRINGS.en.login.error });
+  }, [state.loginPasscode, state.lang, state.loginIntent, patch, navigate]);
 
   const logout = useCallback(() => {
     try { localStorage.removeItem('nad_role'); } catch (e) {}
@@ -223,30 +254,74 @@ export function AppStateProvider({ children }) {
 
   const goToAdmin = useCallback(() => navigate('/admin'), [navigate]);
   const setAdminTab = useCallback((key) => patch({ adminTab: key }), [patch]);
-  const setRegistrationStatus = useCallback((id, status) => setState((s) => {
-    const next = s.adminRegistrations.map((r) => (r.id === id ? { ...r, status } : r));
-    try { localStorage.setItem('nad_registrations', JSON.stringify(next)); } catch (e) {}
-    return { ...s, adminRegistrations: next };
-  }), []);
-  const toggleRegistrationSuspended = useCallback((id) => setState((s) => {
-    const next = s.adminRegistrations.map((r) => (r.id === id ? { ...r, suspended: !r.suspended } : r));
-    try { localStorage.setItem('nad_registrations', JSON.stringify(next)); } catch (e) {}
-    return { ...s, adminRegistrations: next };
-  }), []);
-  const removeDuplicateRegistrations = useCallback(() => setState((s) => {
-    const bestByKey = new Map();
-    const noKey = [];
-    s.adminRegistrations.forEach((r) => {
-      const key = (r.email || r.phone || '').trim().toLowerCase();
-      if (!key) { noKey.push(r); return; }
-      const score = (r.status === 'verified' ? 1 : 0) * 1e15 + new Date(r.registeredAt || 0).getTime();
-      const existing = bestByKey.get(key);
-      if (!existing || score > existing.score) bestByKey.set(key, { r, score });
+  const setRegistrationStatus = useCallback(async (id, status) => {
+    if (isSupabaseConfigured) {
+      try {
+        const headers = { 'Content-Type': 'application/json', ...(await getAdminAuthHeaders()) };
+        const res = await fetch('/api/admin-registrations', { method: 'PATCH', headers, body: JSON.stringify({ id, status }) });
+        const data = await res.json();
+        if (data && data.success) patch((s) => ({ adminRegistrations: s.adminRegistrations.map((r) => (r.id === id ? data.registration : r)) }));
+      } catch (e) {}
+      return;
+    }
+    patch((s) => {
+      const next = s.adminRegistrations.map((r) => (r.id === id ? { ...r, status } : r));
+      try { localStorage.setItem('nad_registrations', JSON.stringify(next)); } catch (e) {}
+      return { adminRegistrations: next };
     });
-    const next = [...Array.from(bestByKey.values()).map((x) => x.r), ...noKey];
-    try { localStorage.setItem('nad_registrations', JSON.stringify(next)); } catch (e) {}
-    return { ...s, adminRegistrations: next };
-  }), []);
+  }, [patch]);
+  const toggleRegistrationSuspended = useCallback(async (id) => {
+    if (isSupabaseConfigured) {
+      const current = state.adminRegistrations.find((r) => r.id === id);
+      const suspended = !(current && current.suspended);
+      try {
+        const headers = { 'Content-Type': 'application/json', ...(await getAdminAuthHeaders()) };
+        const res = await fetch('/api/admin-registrations', { method: 'PATCH', headers, body: JSON.stringify({ id, suspended }) });
+        const data = await res.json();
+        if (data && data.success) patch((s) => ({ adminRegistrations: s.adminRegistrations.map((r) => (r.id === id ? data.registration : r)) }));
+      } catch (e) {}
+      return;
+    }
+    patch((s) => {
+      const next = s.adminRegistrations.map((r) => (r.id === id ? { ...r, suspended: !r.suspended } : r));
+      try { localStorage.setItem('nad_registrations', JSON.stringify(next)); } catch (e) {}
+      return { adminRegistrations: next };
+    });
+  }, [patch, state.adminRegistrations]);
+  const removeDuplicateRegistrations = useCallback(async () => {
+    if (isSupabaseConfigured) {
+      try {
+        const headers = { 'Content-Type': 'application/json', ...(await getAdminAuthHeaders()) };
+        const res = await fetch('/api/admin-registrations', { method: 'POST', headers, body: JSON.stringify({ action: 'dedupe' }) });
+        const data = await res.json();
+        if (data && data.success) patch({ adminRegistrations: data.registrations });
+      } catch (e) {}
+      return;
+    }
+    patch((s) => {
+      const bestByKey = new Map();
+      const noKey = [];
+      s.adminRegistrations.forEach((r) => {
+        const key = (r.email || r.phone || '').trim().toLowerCase();
+        if (!key) { noKey.push(r); return; }
+        const score = (r.status === 'verified' ? 1 : 0) * 1e15 + new Date(r.registeredAt || 0).getTime();
+        const existing = bestByKey.get(key);
+        if (!existing || score > existing.score) bestByKey.set(key, { r, score });
+      });
+      const next = [...Array.from(bestByKey.values()).map((x) => x.r), ...noKey];
+      try { localStorage.setItem('nad_registrations', JSON.stringify(next)); } catch (e) {}
+      return { adminRegistrations: next };
+    });
+  }, [patch]);
+  const loadRegistrations = useCallback(async () => {
+    if (!isSupabaseConfigured) return;
+    try {
+      const headers = await getAdminAuthHeaders();
+      const res = await fetch('/api/admin-registrations', { headers });
+      const data = await res.json();
+      if (data && data.success) patch({ adminRegistrations: data.registrations || [] });
+    } catch (e) {}
+  }, [patch]);
   const loadGenerationCounts = useCallback(() => {
     fetch('/api/admin-generation-counts').then((r) => r.json()).then((data) => {
       if (data && data.success) patch({ generationCounts: data.counts || {} });
@@ -269,40 +344,84 @@ export function AppStateProvider({ children }) {
   const setNewSupplierWebsite = useCallback((e) => patch({ newSupplierWebsite: e.target.value }), [patch]);
   const setNewSupplierEmail = useCallback((e) => patch({ newSupplierEmail: e.target.value }), [patch]);
   const setNewSupplierPhone = useCallback((e) => patch({ newSupplierPhone: e.target.value }), [patch]);
-  const addSupplier = useCallback(() => setState((s) => {
-    const name = s.newSupplierName.trim();
-    if (!name) return s;
-    const slug = name.toLowerCase().replace(/[^a-z]+/g, '');
-    const nextSuppliers = [...s.adminSuppliers, {
-      id: s.adminSuppliers.reduce((m, x) => Math.max(m, x.id), 0) + 1, name,
-      category: 'Furniture', delivery: '4-6 weeks',
-      website: s.newSupplierWebsite.trim() || ('https://' + slug + '.sa'),
-      email: s.newSupplierEmail.trim() || (slug + '@supplier.sa'),
-      phone: s.newSupplierPhone.trim(),
-      status: 'approved',
-    }];
-    try { localStorage.setItem('nad_suppliers', JSON.stringify(nextSuppliers)); } catch (e) {}
-    return {
-      ...s,
-      adminSuppliers: nextSuppliers,
-      newSupplierName: '', newSupplierWebsite: '', newSupplierEmail: '', newSupplierPhone: '',
-    };
-  }), []);
-  const toggleSupplierStatus = useCallback((id) => setState((s) => {
-    const next = s.adminSuppliers.map((sup) => (sup.id === id ? { ...sup, status: sup.status === 'approved' ? 'hidden' : 'approved' } : sup));
-    try { localStorage.setItem('nad_suppliers', JSON.stringify(next)); } catch (e) {}
-    return { ...s, adminSuppliers: next };
-  }), []);
-  const removeSupplier = useCallback((id) => setState((s) => {
-    const next = s.adminSuppliers.filter((sup) => sup.id !== id);
-    try { localStorage.setItem('nad_suppliers', JSON.stringify(next)); } catch (e) {}
-    return { ...s, adminSuppliers: next };
-  }), []);
-  const updateSupplierField = useCallback((id, field, value) => setState((s) => {
-    const next = s.adminSuppliers.map((sup) => (sup.id === id ? { ...sup, [field]: value } : sup));
-    try { localStorage.setItem('nad_suppliers', JSON.stringify(next)); } catch (e) {}
-    return { ...s, adminSuppliers: next };
-  }), []);
+  const addSupplier = useCallback(async () => {
+    const name = state.newSupplierName.trim();
+    if (!name) return;
+    if (isSupabaseConfigured) {
+      try {
+        const headers = { 'Content-Type': 'application/json', ...(await getAdminAuthHeaders()) };
+        const res = await fetch('/api/admin-suppliers', { method: 'POST', headers, body: JSON.stringify({ name, website: state.newSupplierWebsite, email: state.newSupplierEmail, phone: state.newSupplierPhone }) });
+        const data = await res.json();
+        if (data && data.success) patch((s) => ({ adminSuppliers: [...s.adminSuppliers, data.supplier], newSupplierName: '', newSupplierWebsite: '', newSupplierEmail: '', newSupplierPhone: '' }));
+      } catch (e) {}
+      return;
+    }
+    patch((s) => {
+      const slug = name.toLowerCase().replace(/[^a-z]+/g, '');
+      const nextSuppliers = [...s.adminSuppliers, {
+        id: s.adminSuppliers.reduce((m, x) => Math.max(m, x.id), 0) + 1, name,
+        category: 'Furniture', delivery: '4-6 weeks',
+        website: s.newSupplierWebsite.trim() || ('https://' + slug + '.sa'),
+        email: s.newSupplierEmail.trim() || (slug + '@supplier.sa'),
+        phone: s.newSupplierPhone.trim(),
+        status: 'approved',
+      }];
+      try { localStorage.setItem('nad_suppliers', JSON.stringify(nextSuppliers)); } catch (e) {}
+      return { adminSuppliers: nextSuppliers, newSupplierName: '', newSupplierWebsite: '', newSupplierEmail: '', newSupplierPhone: '' };
+    });
+  }, [patch, state.newSupplierName, state.newSupplierWebsite, state.newSupplierEmail, state.newSupplierPhone]);
+  const toggleSupplierStatus = useCallback(async (id) => {
+    if (isSupabaseConfigured) {
+      const current = state.adminSuppliers.find((sup) => sup.id === id);
+      const status = current && current.status === 'approved' ? 'hidden' : 'approved';
+      try {
+        const headers = { 'Content-Type': 'application/json', ...(await getAdminAuthHeaders()) };
+        const res = await fetch('/api/admin-suppliers', { method: 'PATCH', headers, body: JSON.stringify({ id, status }) });
+        const data = await res.json();
+        if (data && data.success) patch((s) => ({ adminSuppliers: s.adminSuppliers.map((sup) => (sup.id === id ? data.supplier : sup)) }));
+      } catch (e) {}
+      return;
+    }
+    patch((s) => {
+      const next = s.adminSuppliers.map((sup) => (sup.id === id ? { ...sup, status: sup.status === 'approved' ? 'hidden' : 'approved' } : sup));
+      try { localStorage.setItem('nad_suppliers', JSON.stringify(next)); } catch (e) {}
+      return { adminSuppliers: next };
+    });
+  }, [patch, state.adminSuppliers]);
+  const removeSupplier = useCallback(async (id) => {
+    if (isSupabaseConfigured) {
+      try {
+        const headers = { 'Content-Type': 'application/json', ...(await getAdminAuthHeaders()) };
+        await fetch('/api/admin-suppliers', { method: 'DELETE', headers, body: JSON.stringify({ id }) });
+      } catch (e) {}
+      patch((s) => ({ adminSuppliers: s.adminSuppliers.filter((sup) => sup.id !== id) }));
+      return;
+    }
+    patch((s) => {
+      const next = s.adminSuppliers.filter((sup) => sup.id !== id);
+      try { localStorage.setItem('nad_suppliers', JSON.stringify(next)); } catch (e) {}
+      return { adminSuppliers: next };
+    });
+  }, [patch]);
+  const updateSupplierField = useCallback((id, field, value) => {
+    patch((s) => {
+      const next = s.adminSuppliers.map((sup) => (sup.id === id ? { ...sup, [field]: value } : sup));
+      if (!isSupabaseConfigured) { try { localStorage.setItem('nad_suppliers', JSON.stringify(next)); } catch (e) {} }
+      return { adminSuppliers: next };
+    });
+    if (isSupabaseConfigured) {
+      getAdminAuthHeaders().then((extra) => fetch('/api/admin-suppliers', { method: 'PATCH', headers: { 'Content-Type': 'application/json', ...extra }, body: JSON.stringify({ id, field, value }) })).catch(() => {});
+    }
+  }, [patch]);
+  const loadSuppliers = useCallback(async () => {
+    if (!isSupabaseConfigured) return;
+    try {
+      const headers = await getAdminAuthHeaders();
+      const res = await fetch('/api/admin-suppliers', { headers });
+      const data = await res.json();
+      if (data && data.success) patch({ adminSuppliers: data.suppliers || [] });
+    } catch (e) {}
+  }, [patch]);
 
   const setConsultationStatus = useCallback((id, status) => patch((s) => ({ adminConsultations: s.adminConsultations.map((c) => (c.id === id ? { ...c, status } : c)) })), [patch]);
   const removeConsultation = useCallback((id) => patch((s) => ({ adminConsultations: s.adminConsultations.filter((c) => c.id !== id) })), [patch]);
@@ -659,7 +778,7 @@ export function AppStateProvider({ children }) {
     toggleTheme, handleAdminImageChange,
     goToLogin, setLoginPasscode, setGuestEmail, setGuestPhone, registerGuest, loginAsAdmin, logout,
     setGuestPanelMode, setGuestLoginIdentifier, loginAsGuest,
-    goToAdmin, setAdminTab, setRegistrationStatus, toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, loadActivityStats,
+    goToAdmin, setAdminTab, setRegistrationStatus, toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, loadActivityStats, loadRegistrations, loadSuppliers,
     getLevelRangeFor, setPriceOverride,
     setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone, addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,
     setConsultationStatus, removeConsultation, removeClient,

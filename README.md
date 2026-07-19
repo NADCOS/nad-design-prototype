@@ -149,6 +149,12 @@ The AI Generation page calls `POST /api/generate-design`, a Vercel serverless fu
 |---|---|---|
 | `GEMINI_API_KEY` | `api/services/nanoBanana.js` only | Server-only secret. Never in frontend code, never `.env.example`. |
 | `NANO_BANANA_MODEL` | `api/services/nanoBanana.js` only | Optional — defaults to `gemini-3.1-flash-image`. |
+| `ADMIN_PASSCODE` | `api/admin-login.js` only | Server-only. Without it, admin login always fails (previously the passcode was hardcoded client-side). |
+| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | `api/services/supabaseAdmin.js` only | Server-only. Bypasses RLS for `generation_logs`, `registrations`, and `suppliers` — see `api/admin-registrations.js` and `api/admin-suppliers.js` for the table SQL. |
+
+### Registrations & suppliers are now Supabase-backed
+
+Both used to live only in the admin's browser `localStorage` (invisible to other admins/devices). They now persist through `api/admin-registrations.js`, `api/guest-lookup.js`, and `api/admin-suppliers.js` — run the `create table` SQL at the top of those two files once in the Supabase SQL editor. Without `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` set, the app falls back to the previous localStorage-only behavior so local demo browsing still needs no env vars.
 
 ## 12. Build validation checklist
 
