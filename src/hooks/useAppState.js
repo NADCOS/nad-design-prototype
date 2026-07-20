@@ -12,6 +12,20 @@ import { STYLES } from '../data/styles.js';
 import { getLevelRange, computeCost, computeWarnings } from '../utils/pricing.js';
 import { generateDesign as requestNanoBananaDesign, getRemainingGenerations } from '../services/nanoBananaClient.js';
 import { buildStructuredPrompt } from '../utils/promptBuilder.js';
+import { urlToResizedJpegDataUrl } from '../utils/imageToBase64.js';
+
+// Selected furniture & lighting pieces that have a product photo (remote
+// catalogue image or admin local override) — sent to the AI generator as
+// exact-product reference images. Capped at 4 (provider limit incl. room photo).
+function getReferenceFurniture(state) {
+  const seen = {};
+  const out = [];
+  (state.selections.furniture || []).forEach((f) => {
+    const src = f.imageUrl || state.imageOverrides['furn-' + f.id] || '';
+    if (src && !seen[f.id]) { seen[f.id] = true; out.push({ src, name: f.name }); }
+  });
+  return out.slice(0, 4);
+}
 import { AI_GENERATION_CONFIG } from '../config/aiGeneration.js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
 import * as projectTypesService from '../services/projectTypesService.js';
@@ -662,8 +676,9 @@ export function AppStateProvider({ children }) {
       mood: state.generationMood,
       hasUploadedImage: !!uploadedImage,
       allowFullRedesign: state.allowFullRedesign,
+      referenceItems: getReferenceFurniture(state).map((r) => r.name),
     });
-  }, [state.selections, state.lang, state.customTypeText, state.generationMood, state.allowFullRedesign]);
+  }, [state.selections, state.lang, state.customTypeText, state.generationMood, state.allowFullRedesign, state.imageOverrides]);
 
   const setPromptDraft = useCallback((e) => patch({ promptDraft: e.target.value }), [patch]);
   const resetPromptToAuto = useCallback(() => patch({ promptDraft: null }), [patch]);
@@ -677,9 +692,16 @@ export function AppStateProvider({ children }) {
     const prompt = (state.promptDraft !== null && state.promptDraft !== undefined) ? state.promptDraft : getAutoPrompt();
     patch({ generationStatus: 'generating', generationError: null });
     const uploadedImage = (state.selections.uploads || []).find((u) => u.isImage && u.dataUrl);
+    // Downscale each selected product photo and attach it so the generator
+    // reproduces the exact furniture/lighting pieces (skip any that fail).
+    const referenceImages = [];
+    for (const ref of getReferenceFurniture(state)) {
+      try { referenceImages.push({ dataUrl: await urlToResizedJpegDataUrl(ref.src, 768), name: ref.name }); } catch (e) { console.warn('[generate] reference image skipped:', e); }
+    }
     const result = await requestNanoBananaDesign({
       prompt,
       imageDataUrl: uploadedImage ? uploadedImage.dataUrl : undefined,
+      referenceImages,
       aspectRatio: state.generationAspectRatio || AI_GENERATION_CONFIG.defaultAspectRatio,
       imageSize: state.generationImageSize || AI_GENERATION_CONFIG.defaultImageSize,
       projectId: state.selections.projectType ? state.selections.projectType.key : null,

@@ -56,15 +56,20 @@ function findImageUrl(task) {
  * @param {string} [args.imageMimeType]
  * @param {string} [args.aspectRatio] - "16:9" | "4:3" | "1:1" | "9:16" | "3:2"
  */
-export async function generateWithEvoLink({ prompt, imageBase64, imageMimeType, aspectRatio }) {
+export async function generateWithEvoLink({ prompt, imageBase64, imageMimeType, referenceImages, aspectRatio }) {
   const apiKey = process.env.EVOLINK_API_KEY;
   if (!apiKey) throw fail('MISSING_API_KEY');
   const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
 
   const body = { model: MODEL, prompt, size: aspectRatio || '16:9' };
-  if (imageBase64) {
-    body.image_urls = [await uploadInputImage(imageBase64, imageMimeType || 'image/jpeg')];
+  // EvoLink accepts up to 5 image URLs: room photo first (if any), then the
+  // product reference photos — same order the prompt describes.
+  const urls = [];
+  if (imageBase64) urls.push(await uploadInputImage(imageBase64, imageMimeType || 'image/jpeg'));
+  for (const r of (referenceImages || []).slice(0, 5 - urls.length)) {
+    urls.push(await uploadInputImage(r.base64, r.mimeType || 'image/jpeg'));
   }
+  if (urls.length) body.image_urls = urls;
 
   const createRes = await fetch(`${BASE_URL}/v1/images/generations`, {
     method: 'POST', headers, body: JSON.stringify(body),

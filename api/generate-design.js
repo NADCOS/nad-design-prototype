@@ -50,7 +50,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { prompt, imageBase64, imageMimeType, aspectRatio, imageSize, guestIdentifier } = payload;
+  const { prompt, imageBase64, imageMimeType, aspectRatio, imageSize, guestIdentifier, referenceImages } = payload;
 
   // ---- validation ----
   if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
@@ -81,6 +81,17 @@ export default async function handler(req, res) {
       const { status, body } = safeError('Unsupported image type. Please use JPEG, PNG, or WebP.', 400);
       res.status(status).json(body);
       return;
+    }
+  }
+
+  // ---- reference product images (selected furniture & lighting) ----
+  const MAX_REF_BYTES = 4 * 1024 * 1024;
+  const refs = [];
+  if (Array.isArray(referenceImages)) {
+    for (const r of referenceImages.slice(0, 4)) {
+      if (!r || typeof r.base64 !== 'string' || !isValidBase64(r.base64)) continue;
+      if (base64ByteLength(r.base64) > MAX_REF_BYTES) continue;
+      refs.push({ base64: r.base64, mimeType: ALLOWED_MIME_TYPES.includes(r.mimeType) ? r.mimeType : 'image/jpeg' });
     }
   }
 
@@ -115,6 +126,7 @@ export default async function handler(req, res) {
       prompt,
       imageBase64: imageBase64 || undefined,
       imageMimeType: imageMimeType || 'image/jpeg',
+      referenceImages: refs,
       aspectRatio: finalAspectRatio,
       imageSize: finalImageSize,
     });

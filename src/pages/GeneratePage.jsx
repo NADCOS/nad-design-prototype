@@ -6,17 +6,12 @@ import { LIGHT_MOODS, QUALITY_OPTS } from '../data/aiOptions.js';
 import { AI_GENERATION_CONFIG } from '../config/aiGeneration.js';
 import PromptPreview from '../components/PromptPreview.jsx';
 import ComparisonViewer from '../components/ComparisonViewer.jsx';
+import BrandLoader from '../components/BrandLoader.jsx';
 import ConsultationButton from '../components/ConsultationButton.jsx';
 import GenerationQuota from '../components/GenerationQuota.jsx';
 import Hoverable from '../components/Hoverable.jsx';
 import { sx } from '../utils/sx.js';
 import { AI_GENERATION_CONFIG as AI_CFG } from '../config/aiGeneration.js';
-
-const shimmerStyle = {
-  background: 'linear-gradient(90deg, oklch(92% 0.01 75) 0%, oklch(97% 0.005 80) 50%, oklch(92% 0.01 75) 100%)',
-  backgroundSize: '800px 100%',
-  animation: 'nad-shimmer 1.4s infinite linear',
-};
 
 const ghostBtnStyle = 'font-size:12px;font-weight:600;padding:11px 10px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;transition:transform .18s ease,background .18s ease;';
 const ghostBtnHoverStyle = 'transform:translateY(-2px);background:var(--border);';
@@ -96,15 +91,7 @@ export default function GeneratePage() {
               <span style={{ fontFamily: 'ui-monospace,monospace', fontSize: 12.5, color: 'var(--text)', background: 'oklch(97% 0.01 80 / 0.85)', padding: '8px 14px', borderRadius: 8 }}>awaiting generation</span>
             </div>
           )}
-          {isGenLoading && (
-            <div role="status" aria-live="polite">
-              <div style={{ aspectRatio: '4/3', borderRadius: 16, ...shimmerStyle }} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center', marginTop: 16 }}>
-                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', textAlign: 'center' }}>{T.generate.creatingMessage}</span>
-                <span style={{ fontSize: 12.5, color: 'var(--text-2)', textAlign: 'center', maxWidth: 260 }}>{T.generate.creatingSubMessage}</span>
-              </div>
-            </div>
-          )}
+          {isGenLoading && <BrandLoader title={T.generate.creatingMessage} subtitle={T.generate.creatingSubMessage} />}
           {isGenError && (
             <div style={{ aspectRatio: '4/3', borderRadius: 16, background: 'oklch(95% 0.03 30)', border: '1px solid oklch(80% 0.06 30)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 24, textAlign: 'center' }} role="alert">
               <span style={{ fontSize: 15, fontWeight: 700, color: 'oklch(40% 0.14 30)' }}>{T.generate.errorTitle}</span>

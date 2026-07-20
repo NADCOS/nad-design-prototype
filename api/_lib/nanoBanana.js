@@ -27,7 +27,7 @@ function getClient() {
  * @param {string} [args.imageSize] - "1K" | "2K"
  * @returns {Promise<{ imageDataUrl: string, interactionId: string }>}
  */
-export async function generateWithNanoBanana({ prompt, imageBase64, imageMimeType, aspectRatio, imageSize }) {
+export async function generateWithNanoBanana({ prompt, imageBase64, imageMimeType, referenceImages, aspectRatio, imageSize }) {
   const ai = getClient();
 
   const response_format = {
@@ -37,15 +37,12 @@ export async function generateWithNanoBanana({ prompt, imageBase64, imageMimeTyp
     image_size: imageSize || '2K',
   };
 
-  let input = prompt;
-  if (imageBase64) {
-    // Image-editing mode: preserve the uploaded room's architecture, edit only
-    // the selected materials/furniture/lighting per the prompt's instructions.
-    input = [
-      { type: 'text', text: prompt },
-      { type: 'image', mime_type: imageMimeType || 'image/jpeg', data: imageBase64 },
-    ];
-  }
+  // Image order matches the prompt: room photo first (if any), then the
+  // product reference photos of the selected furniture & lighting.
+  const imageParts = [];
+  if (imageBase64) imageParts.push({ type: 'image', mime_type: imageMimeType || 'image/jpeg', data: imageBase64 });
+  (referenceImages || []).forEach((r) => imageParts.push({ type: 'image', mime_type: r.mimeType || 'image/jpeg', data: r.base64 }));
+  const input = imageParts.length ? [{ type: 'text', text: prompt }, ...imageParts] : prompt;
 
   const interaction = await ai.interactions.create({
     model: MODEL,

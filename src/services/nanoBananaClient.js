@@ -31,13 +31,14 @@ function mapStatusToMessage(status) {
  * @param {Object} args
  * @param {string} args.prompt
  * @param {string} [args.imageDataUrl] - full data URL of an uploaded room photo
+ * @param {Array<{dataUrl: string, name?: string}>} [args.referenceImages] - product photos of selected furniture/lighting
  * @param {string} [args.aspectRatio] - e.g. "16:9"
  * @param {string} [args.imageSize] - "1K" | "2K"
  * @param {string} [args.projectId]
  * @param {string} [args.guestIdentifier] - logged-in guest's email/phone, for the server-side daily cap (omit for admins)
  * @returns {Promise<{ success: boolean, image?: string, interactionId?: string, error?: string }>}
  */
-export async function generateDesign({ prompt, imageDataUrl, aspectRatio, imageSize, projectId, guestIdentifier }) {
+export async function generateDesign({ prompt, imageDataUrl, referenceImages, aspectRatio, imageSize, projectId, guestIdentifier }) {
   if (activeRequest) {
     return { success: false, error: 'A design is already being generated. Please wait for it to finish.' };
   }
@@ -73,6 +74,13 @@ export async function generateDesign({ prompt, imageDataUrl, aspectRatio, imageS
     }
     body.imageBase64 = stripDataUrlPrefix(imageDataUrl);
     body.imageMimeType = mime;
+  }
+  if (Array.isArray(referenceImages) && referenceImages.length) {
+    body.referenceImages = referenceImages.slice(0, 4).map((r) => ({
+      base64: stripDataUrlPrefix(r.dataUrl),
+      mimeType: extractMimeType(r.dataUrl, 'image/jpeg'),
+      name: r.name || '',
+    }));
   }
 
   const requestPromise = fetch('/api/generate-design', {

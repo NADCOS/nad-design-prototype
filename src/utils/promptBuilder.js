@@ -52,7 +52,7 @@ const NEGATIVE_LINES = {
  * @param {boolean} [args.allowFullRedesign] - if true, architecture-preservation rules are relaxed
  * @returns {string} the full structured prompt, ready to send to Nano Banana
  */
-export function buildStructuredPrompt({ selections, lang, customTypeText, mood, hasUploadedImage, allowFullRedesign }) {
+export function buildStructuredPrompt({ selections, lang, customTypeText, mood, hasUploadedImage, allowFullRedesign, referenceItems }) {
   const ar = lang === 'ar';
   const L = (en, arText) => (ar ? arText : en);
   const lines = [];
@@ -114,6 +114,19 @@ export function buildStructuredPrompt({ selections, lang, customTypeText, mood, 
   lines.push('');
   lines.push(L('LIGHTING & ATMOSPHERE', 'الإضاءة والأجواء') + ':');
   lines.push('- ' + (moodObj ? moodObj[lang] : L('Soft, natural lighting', 'إضاءة طبيعية ناعمة')));
+
+  // ---- 4b. Attached product photos of the selected furniture & lighting ----
+  if (referenceItems && referenceItems.length) {
+    lines.push('');
+    lines.push(L('PRODUCT REFERENCE IMAGES (exact pieces \u2014 reproduce faithfully)', '\u0635\u0648\u0631 \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0627\u0644\u0645\u0631\u062c\u0639\u064a\u0629 (\u0642\u0637\u0639 \u0645\u062d\u062f\u062f\u0629 \u2014 \u0627\u0646\u0633\u062e\u0647\u0627 \u0628\u062f\u0642\u0629)') + ':');
+    if (hasUploadedImage) {
+      lines.push(L('The first attached image is the existing room photo (architecture reference). The following images are product photos of the selected furniture & lighting, in this order:', '\u0627\u0644\u0635\u0648\u0631\u0629 \u0627\u0644\u0623\u0648\u0644\u0649 \u0627\u0644\u0645\u0631\u0641\u0642\u0629 \u0647\u064a \u0635\u0648\u0631\u0629 \u0627\u0644\u063a\u0631\u0641\u0629 \u0627\u0644\u062d\u0627\u0644\u064a\u0629 (\u0645\u0631\u062c\u0639 \u0645\u0639\u0645\u0627\u0631\u064a). \u0627\u0644\u0635\u0648\u0631 \u0627\u0644\u062a\u0627\u0644\u064a\u0629 \u0647\u064a \u0635\u0648\u0631 \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0644\u0644\u0623\u062b\u0627\u062b \u0648\u0627\u0644\u0625\u0636\u0627\u0621\u0629 \u0627\u0644\u0645\u062e\u062a\u0627\u0631\u0629\u060c \u0628\u0647\u0630\u0627 \u0627\u0644\u062a\u0631\u062a\u064a\u0628:'));
+    } else {
+      lines.push(L('The attached images are product photos of the selected furniture & lighting, in this order:', '\u0627\u0644\u0635\u0648\u0631 \u0627\u0644\u0645\u0631\u0641\u0642\u0629 \u0647\u064a \u0635\u0648\u0631 \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0644\u0644\u0623\u062b\u0627\u062b \u0648\u0627\u0644\u0625\u0636\u0627\u0621\u0629 \u0627\u0644\u0645\u062e\u062a\u0627\u0631\u0629\u060c \u0628\u0647\u0630\u0627 \u0627\u0644\u062a\u0631\u062a\u064a\u0628:'));
+    }
+    referenceItems.forEach((name, i) => lines.push('- ' + L('Product image', '\u0635\u0648\u0631\u0629 \u0627\u0644\u0645\u0646\u062a\u062c') + ' ' + (i + 1) + ': ' + name));
+    lines.push(L('Place these exact products in the design. Match each product photo precisely \u2014 shape, proportions, materials, upholstery, colors and details. Do not substitute similar-looking alternatives.', '\u0636\u0639 \u0647\u0630\u0647 \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a \u0646\u0641\u0633\u0647\u0627 \u0641\u064a \u0627\u0644\u062a\u0635\u0645\u064a\u0645. \u0637\u0627\u0628\u0642 \u0643\u0644 \u0635\u0648\u0631\u0629 \u0645\u0646\u062a\u062c \u0628\u062f\u0642\u0629 \u2014 \u0627\u0644\u0634\u0643\u0644 \u0648\u0627\u0644\u0646\u0633\u0628 \u0648\u0627\u0644\u062e\u0627\u0645\u0627\u062a \u0648\u0627\u0644\u062a\u0646\u062c\u064a\u062f \u0648\u0627\u0644\u0623\u0644\u0648\u0627\u0646 \u0648\u0627\u0644\u062a\u0641\u0627\u0635\u064a\u0644. \u0644\u0627 \u062a\u0633\u062a\u0628\u062f\u0644\u0647\u0627 \u0628\u0628\u062f\u0627\u0626\u0644 \u0645\u0634\u0627\u0628\u0647\u0629.'));
+  }
 
   // ---- 5. Final image quality ----
   lines.push('');
