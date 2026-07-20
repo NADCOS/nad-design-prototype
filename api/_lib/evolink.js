@@ -27,8 +27,15 @@ async function uploadInputImage(imageBase64, mimeType) {
   const ext = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
   const path = `inputs/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   const bytes = Buffer.from(imageBase64, 'base64');
-  const bucket = supabase.storage.from(process.env.EVOLINK_INPUT_BUCKET || 'generation-inputs');
-  const { error: upErr } = await bucket.upload(path, bytes, { contentType: mimeType, upsert: false });
+  const bucketName = process.env.EVOLINK_INPUT_BUCKET || 'generation-inputs';
+  const bucket = supabase.storage.from(bucketName);
+  let { error: upErr } = await bucket.upload(path, bytes, { contentType: mimeType, upsert: false });
+  if (upErr && /bucket.*not.*found|not.*exist/i.test(upErr.message || '')) {
+    // First run: the bucket doesn't exist yet — create it (private) and retry,
+    // so no manual Supabase setup step is needed.
+    try { await supabase.storage.createBucket(bucketName, { public: false }); } catch (e) { /* race: may already exist */ }
+    ({ error: upErr } = await bucket.upload(path, bytes, { contentType: mimeType, upsert: false }));
+  }
   if (upErr) throw fail('IMAGE_UPLOAD_FAILED', 'IMAGE_UPLOAD_FAILED: ' + upErr.message);
   const { data, error: signErr } = await bucket.createSignedUrl(path, 3600);
   if (signErr || !data || !data.signedUrl) throw fail('IMAGE_UPLOAD_FAILED', 'IMAGE_UPLOAD_FAILED: could not sign URL');

@@ -42,7 +42,7 @@ body { overflow-x: hidden; }
 .nad-skeleton { background: linear-gradient(90deg, oklch(92% 0.015 78) 25%, oklch(96.5% 0.01 80) 37%, oklch(92% 0.015 78) 63%) !important; background-size: 400px 100% !important; animation: nad-shimmer 1.2s linear infinite; }
 .nad-nav-mobile { display: none !important; }
 .nad-journey-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; box-shadow: 0 -6px 24px -12px oklch(20% 0.02 50 / 0.35); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); padding-inline: max(16px, calc((100% - 1240px) / 2 + 28px)); background: var(--nav-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--border); }
-.nad-journey-nav-spacer { display: block; height: 92px; }
+.nad-journey-nav-spacer { display: block; height: 100px; }
 body:has(.nad-journey-nav) .nad-whatsapp-fab { bottom: 100px !important; }
 body:has(.nad-journey-nav) .nad-toast { bottom: 100px !important; }
 @keyframes nad-letter-in { from { opacity: 0; transform: translateY(16px); filter: blur(6px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
@@ -56,6 +56,11 @@ body:has(.nad-journey-nav) .nad-toast { bottom: 100px !important; }
 }
 @keyframes nad-sheet-up { from { transform: translateY(48px); } to { transform: translateY(0); } }
 @media (max-width: 700px) {
+  /* On phones the bar's contents (Back / price / Continue) can wrap to two
+     rows, making it taller than the default spacer — reserve enough room so
+     it never covers the content's last buttons. */
+  .nad-journey-nav-spacer { height: 160px; }
+  .nad-journey-nav { gap: 8px; padding-top: 8px; }
   .nad-nav-desktop { display: none !important; }
   .nad-nav-mobile { display: flex !important; }
   .nad-progress-full { display: none !important; }
