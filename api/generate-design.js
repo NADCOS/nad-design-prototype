@@ -1,6 +1,6 @@
 // NAD Design — POST /api/generate-design
 // Secure Vercel serverless function: validates the request, calls Nano Banana
-// (Gemini 3.1 Flash Image) via api/_lib/nanoBanana.js, and returns a plain
+// (Gemini 2.5 Flash Image) via api/_lib/nanoBanana.js, and returns a plain
 // JSON result. GEMINI_API_KEY never leaves this file.
 import { generateWithNanoBanana } from './_lib/nanoBanana.js';
 import { getSupabaseAdmin } from './_lib/supabaseAdmin.js';
