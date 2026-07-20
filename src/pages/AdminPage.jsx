@@ -15,7 +15,7 @@ export default function AdminPage() {
     state, setAdminTab, setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone,
     addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,
     getLevelRangeFor, setPriceOverride, setConsultationStatus, removeConsultation, removeClient, setRegistrationStatus,
-    toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, loadActivityStats, loadRegistrations, loadSuppliers, loadGuestProjects,
+    toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, loadActivityStats, loadRegistrations, loadSuppliers, loadGuestProjects, loadSiteData,
   } = useAppState();
   const T = STRINGS[state.lang];
   const isAdmin = state.role === 'admin';
@@ -26,6 +26,7 @@ export default function AdminPage() {
   useEffect(() => { if (isAdmin) loadRegistrations(); }, [isAdmin, loadRegistrations]);
   useEffect(() => { if (isAdmin) loadSuppliers(); }, [isAdmin, loadSuppliers]);
   useEffect(() => { if (isAdmin) loadGuestProjects(); }, [isAdmin, loadGuestProjects]);
+  useEffect(() => { if (isAdmin) loadSiteData(true); }, [isAdmin, loadSiteData]);
   if (!isAdmin) return null;
 
   const tabs = ['overview', 'leads', 'suppliers', 'pricing', 'consultations', 'clients', 'registrations'];

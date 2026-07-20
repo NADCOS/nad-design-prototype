@@ -39,7 +39,7 @@ body { overflow-x: hidden; }
 :focus-visible { outline: 2px solid oklch(64% 0.10 68); outline-offset: 2px; }
 .nad-skeleton { background: linear-gradient(90deg, oklch(92% 0.015 78) 25%, oklch(96.5% 0.01 80) 37%, oklch(92% 0.015 78) 63%) !important; background-size: 400px 100% !important; animation: nad-shimmer 1.2s linear infinite; }
 .nad-nav-mobile { display: none !important; }
-.nad-journey-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 36px; }
+.nad-journey-nav { position: sticky; bottom: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 36px; padding: 12px 0; background: var(--nav-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--border); }
 .nad-journey-nav-spacer { display: none; }
 .nad-progress-compact { display: none; }
 .nad-sheet-handle { display: none; width: 44px; height: 4px; border-radius: 100px; background: oklch(75% 0.02 70); margin: 0 auto 14px; }

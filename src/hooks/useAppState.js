@@ -117,6 +117,7 @@ export function AppStateProvider({ children }) {
       try { const savedRegs = JSON.parse(localStorage.getItem('nad_registrations') || '[]'); if (Array.isArray(savedRegs)) patch({ adminRegistrations: savedRegs }); } catch (e) {}
       try { const savedSuppliers = JSON.parse(localStorage.getItem('nad_suppliers') || 'null'); if (Array.isArray(savedSuppliers) && savedSuppliers.length) patch({ adminSuppliers: savedSuppliers }); } catch (e) {}
     }
+    loadSiteData(false); // pricing overrides are site-wide — load for everyone
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -182,6 +183,61 @@ export function AppStateProvider({ children }) {
       const data = await res.json();
       if (data && data.success) patch({ adminGuestProjects: data.projects || [] });
     } catch (e) {}
+  }, [patch]);
+
+  // Admin-edited dashboard data (pricing overrides, clients, consultations)
+  // persists in Supabase (site_data table) so it survives redeploys and is
+  // shared across admins. Pricing loads for EVERYONE, since it drives the
+  // price ranges guests see.
+  const siteDataTimer = useRef(null);
+  const persistSiteData = useCallback((keys) => {
+    if (siteDataTimer.current) clearTimeout(siteDataTimer.current);
+    siteDataTimer.current = setTimeout(async () => {
+      const s = stateRef.current;
+      if (!s || s.role !== 'admin') return;
+      const payloadByKey = {
+        pricing: { priceOverrides: s.priceOverrides },
+        clients: { clients: s.adminClients },
+        consultations: { consultations: s.adminConsultations },
+      };
+      for (const key of keys) {
+        const data = payloadByKey[key];
+        if (!data) continue;
+        if (isSupabaseConfigured) {
+          try {
+            const headers = { 'Content-Type': 'application/json', ...(await getAdminAuthHeaders()) };
+            await fetch('/api/admin-site-data', { method: 'POST', headers, body: JSON.stringify({ key, data }) });
+          } catch (e) {}
+        } else {
+          try { localStorage.setItem('nad_site_data::' + key, JSON.stringify(data)); } catch (e) {}
+        }
+      }
+    }, 600);
+  }, []);
+
+  const loadSiteData = useCallback(async (isAdminView) => {
+    const apply = (bag) => patch((s) => ({
+      priceOverrides: (bag.pricing && bag.pricing.priceOverrides) || s.priceOverrides,
+      adminClients: (bag.clients && bag.clients.clients) || s.adminClients,
+      adminConsultations: (bag.consultations && bag.consultations.consultations) || s.adminConsultations,
+    }));
+    if (isSupabaseConfigured) {
+      try {
+        const headers = isAdminView ? await getAdminAuthHeaders() : {};
+        const res = await fetch('/api/admin-site-data' + (isAdminView ? '' : '?keys=pricing'), { headers });
+        const d = await res.json();
+        if (d && d.success && d.data) apply(d.data);
+      } catch (e) {}
+    } else {
+      try {
+        const bag = {};
+        ['pricing', 'clients', 'consultations'].forEach((k) => {
+          const v = JSON.parse(localStorage.getItem('nad_site_data::' + k) || 'null');
+          if (v) bag[k] = v;
+        });
+        apply(bag);
+      } catch (e) {}
+    }
   }, [patch]);
 
   const toggleTheme = useCallback(() => setState((s) => {
@@ -407,7 +463,8 @@ export function AppStateProvider({ children }) {
   const setPriceOverride = useCallback((key, field) => (e) => {
     const num = parseFloat(e.target.value);
     patch((s) => ({ priceOverrides: { ...s.priceOverrides, [key]: { ...s.priceOverrides[key], [field]: isNaN(num) ? undefined : num } } }));
-  }, [patch]);
+    persistSiteData(['pricing']);
+  }, [patch, persistSiteData]);
 
   const setNewSupplierName = useCallback((e) => patch({ newSupplierName: e.target.value }), [patch]);
   const setNewSupplierWebsite = useCallback((e) => patch({ newSupplierWebsite: e.target.value }), [patch]);
@@ -492,9 +549,9 @@ export function AppStateProvider({ children }) {
     } catch (e) {}
   }, [patch]);
 
-  const setConsultationStatus = useCallback((id, status) => patch((s) => ({ adminConsultations: s.adminConsultations.map((c) => (c.id === id ? { ...c, status } : c)) })), [patch]);
-  const removeConsultation = useCallback((id) => patch((s) => ({ adminConsultations: s.adminConsultations.filter((c) => c.id !== id) })), [patch]);
-  const removeClient = useCallback((id) => patch((s) => ({ adminClients: s.adminClients.filter((c) => c.id !== id) })), [patch]);
+  const setConsultationStatus = useCallback((id, status) => { patch((s) => ({ adminConsultations: s.adminConsultations.map((c) => (c.id === id ? { ...c, status } : c)) })); persistSiteData(['consultations']); }, [patch, persistSiteData]);
+  const removeConsultation = useCallback((id) => { patch((s) => ({ adminConsultations: s.adminConsultations.filter((c) => c.id !== id) })); persistSiteData(['consultations']); }, [patch, persistSiteData]);
+  const removeClient = useCallback((id) => { patch((s) => ({ adminClients: s.adminClients.filter((c) => c.id !== id) })); persistSiteData(['clients']); }, [patch, persistSiteData]);
 
   const goHome = useCallback(() => navigate('/'), [navigate]);
   const goToStart = useCallback(() => {
@@ -859,7 +916,7 @@ export function AppStateProvider({ children }) {
     toggleTheme, handleAdminImageChange,
     goToLogin, setLoginPasscode, setGuestEmail, setGuestPhone, registerGuest, loginAsAdmin, logout,
     setGuestPanelMode, setGuestLoginIdentifier, loginAsGuest,
-    goToAdmin, setAdminTab, setRegistrationStatus, toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, loadActivityStats, loadRegistrations, loadSuppliers, loadGuestProjects,
+    goToAdmin, setAdminTab, setRegistrationStatus, toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, loadActivityStats, loadRegistrations, loadSuppliers, loadGuestProjects, loadSiteData,
     saveGuestProject, resumeSavedProject, dismissResume,
     getLevelRangeFor, setPriceOverride,
     setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone, addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,
