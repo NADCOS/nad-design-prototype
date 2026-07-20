@@ -715,9 +715,16 @@ export function AppStateProvider({ children }) {
     for (const ref of getReferenceFurniture(state)) {
       try { referenceImages.push({ dataUrl: await urlToResizedJpegDataUrl(ref.src, 768), name: ref.name }); } catch (e) { console.warn('[generate] reference image skipped:', e); }
     }
+    // Downscale the room photo too — phone camera photos (5-8MB) pushed the
+    // request body over Vercel's 4.5MB limit, which killed generation on mobile.
+    let roomImageDataUrl;
+    if (uploadedImage) {
+      try { roomImageDataUrl = await urlToResizedJpegDataUrl(uploadedImage.dataUrl, 1600, 0.85); }
+      catch (e) { roomImageDataUrl = uploadedImage.dataUrl; }
+    }
     const result = await requestNanoBananaDesign({
       prompt,
-      imageDataUrl: uploadedImage ? uploadedImage.dataUrl : undefined,
+      imageDataUrl: roomImageDataUrl,
       referenceImages,
       aspectRatio: state.generationAspectRatio || AI_GENERATION_CONFIG.defaultAspectRatio,
       imageSize: state.generationImageSize || AI_GENERATION_CONFIG.defaultImageSize,

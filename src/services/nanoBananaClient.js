@@ -22,6 +22,7 @@ export function getRemainingGenerations() {
 function mapStatusToMessage(status) {
   if (status === 400) return 'The request was invalid. Please check your prompt and image, then try again.';
   if (status === 405) return 'Unsupported request method.';
+  if (status === 413) return 'The uploaded photo is too large to send. Please use a smaller image and try again.';
   if (status === 429) return 'Too many generation requests. Please wait a moment and try again.';
   if (status === 502) return 'The AI design generator is temporarily unavailable. Please try again shortly.';
   return 'The design could not be generated at this time. Please try again or reduce the uploaded image size.';
