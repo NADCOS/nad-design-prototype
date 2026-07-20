@@ -34,3 +34,36 @@ body { overflow-x: hidden; }
   .nad-header-brand-text { display: none !important; }
   h1 { font-size: clamp(22px, 7vw, 30px) !important; }
 }
+
+/* ————— UX pass: focus rings, skeletons, mobile nav, journey bar, sheets, swipe rows ————— */
+:focus-visible { outline: 2px solid oklch(64% 0.10 68); outline-offset: 2px; }
+.nad-skeleton { background: linear-gradient(90deg, oklch(92% 0.015 78) 25%, oklch(96.5% 0.01 80) 37%, oklch(92% 0.015 78) 63%) !important; background-size: 400px 100% !important; animation: nad-shimmer 1.2s linear infinite; }
+.nad-nav-mobile { display: none !important; }
+.nad-journey-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 36px; }
+.nad-journey-nav-spacer { display: none; }
+.nad-progress-compact { display: none; }
+.nad-sheet-handle { display: none; width: 44px; height: 4px; border-radius: 100px; background: oklch(75% 0.02 70); margin: 0 auto 14px; }
+.nad-journey-rail { display: none; }
+@media (min-width: 1100px) {
+  .nad-journey-grid { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 36px; align-items: start; }
+  .nad-journey-rail { display: block; position: sticky; top: 90px; }
+}
+@keyframes nad-sheet-up { from { transform: translateY(48px); } to { transform: translateY(0); } }
+@media (max-width: 700px) {
+  .nad-nav-desktop { display: none !important; }
+  .nad-nav-mobile { display: flex !important; }
+  .nad-progress-full { display: none !important; }
+  .nad-progress-compact { display: block !important; }
+  [role="tab"] { min-height: 44px; display: inline-flex !important; align-items: center; }
+  .nad-journey-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; margin: 0; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); background: var(--nav-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--border); }
+  .nad-journey-nav-spacer { display: block; height: 88px; }
+  #root:has(.nad-journey-nav) .nad-whatsapp-fab { bottom: 100px !important; }
+  #root:has(.nad-journey-nav) .nad-toast { bottom: 100px !important; }
+  .nad-modal-overlay { align-items: flex-end !important; }
+  .nad-modal-panel { width: 100% !important; max-width: 100% !important; border-radius: 20px 20px 0 0 !important; max-height: 88vh; overflow: auto; animation: nad-sheet-up .28s ease both; padding-bottom: calc(24px + env(safe-area-inset-bottom)) !important; }
+  .nad-sheet-handle { display: block; }
+  .nad-mat-preview { display: none !important; }
+  .nad-swipe-row { grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: 46%; overflow-x: auto; scroll-snap-type: x proximity; padding: 2px 2px 10px; -webkit-overflow-scrolling: touch; }
+  .nad-swipe-row > * { scroll-snap-align: start; }
+  .nad-swipe-row-lg { grid-auto-columns: 86%; }
+}

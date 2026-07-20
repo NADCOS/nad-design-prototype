@@ -3,7 +3,7 @@ import { useAppState } from '../hooks/useAppState.js';
 import { STRINGS } from '../data/translations.js';
 
 // Business WhatsApp number replies go to — digits only, country code first, no leading +.
-const BUSINESS_WHATSAPP_NUMBER = '966534581911';
+const BUSINESS_WHATSAPP_NUMBER = '9665XXXXXXXX';
 
 export default function WhatsAppButton() {
   const { state } = useAppState();
@@ -33,7 +33,7 @@ export default function WhatsAppButton() {
   };
 
   return (
-    <div style={{ position: 'fixed', bottom: 26, insetInlineEnd: 26, zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 14 }}>
+    <div className="nad-whatsapp-fab" style={{ position: 'fixed', bottom: 26, insetInlineEnd: 26, zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 14 }}>
       {open && (
         <form onSubmit={submit} style={{ width: 320, maxWidth: 'calc(100vw - 40px)', background: 'var(--surface)', color: 'var(--text)', borderRadius: 18, boxShadow: '0 20px 50px oklch(20% 0.02 50 / 0.35)', overflow: 'hidden', border: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'oklch(24% 0.02 55)', color: '#fff' }}>

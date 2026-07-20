@@ -1,21 +1,18 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../hooks/useAppState.js';
 import { STRINGS, fmtSar } from '../data/translations.js';
 import { DESIGN_LEVELS, PREFILL_LEVEL_IMAGES } from '../data/designLevels.js';
 import DesignLevelCard from '../components/DesignLevelCard.jsx';
 import Hoverable from '../components/Hoverable.jsx';
+import JourneyNav from '../components/JourneyNav.jsx';
 
 export default function LevelPage({ headFont }) {
-  const navigate = useNavigate();
   const { state, selectLevel, toggleCompare, nextFromLevel, getLevelRangeFor, handleAdminImageChange } = useAppState();
   const lang = state.lang;
   const T = STRINGS[lang];
   const isAdmin = state.role === 'admin';
   const canProceedLevel = !!state.selections.designLevel;
   const compareLabel = state.compareOpen ? T.level.hideCompare : T.level.compare;
-  const btn = (enabled) => 'font-size:14.5px;font-weight:600;color:var(--btn-text);background:' + (enabled ? 'var(--btn-bg)' : 'var(--border)') + ';border:none;padding:14px 30px;border-radius:100px;cursor:' + (enabled ? 'pointer' : 'not-allowed') + ';transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;';
-  const btnHover = (enabled) => (enabled ? 'transform:translateY(-2px);box-shadow:0 10px 22px -8px oklch(20% 0.02 50 / 0.4);filter:brightness(1.08);' : '');
 
   return (
     <section data-screen-label="Design Level">
@@ -58,10 +55,7 @@ export default function LevelPage({ headFont }) {
           );
         })}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 36 }}>
-        <Hoverable as="button" type="button" style="font-size:14px;font-weight:600;color:var(--text);background:transparent;border:1px solid var(--border);padding:13px 26px;border-radius:100px;cursor:pointer;transition:transform .18s ease,background .18s ease;" hoverStyle="transform:translateY(-2px);background:var(--border);" onClick={() => navigate('/design/type')}>{T.common.back}</Hoverable>
-        <Hoverable as="button" type="button" disabled={!canProceedLevel} style={btn(canProceedLevel)} hoverStyle={btnHover(canProceedLevel)} onClick={nextFromLevel}>{T.common.next}</Hoverable>
-      </div>
+      <JourneyNav backTo="type" onNext={nextFromLevel} nextDisabled={!canProceedLevel} />
     </section>
   );
 }

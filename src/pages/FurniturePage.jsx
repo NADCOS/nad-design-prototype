@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../hooks/useAppState.js';
 import { STRINGS, fmtSar } from '../data/translations.js';
 import { FURNITURE_CATEGORIES, FURNITURE_ITEMS, WOOD_FINISH_OPTS, FABRIC_OPTS, METAL_OPTS } from '../data/furniture.js';
 import { isSupabaseConfigured } from '../lib/supabase.js';
 import FurnitureCard from '../components/FurnitureCard.jsx';
 import FurnitureEditModal from '../components/FurnitureEditModal.jsx';
-import Hoverable from '../components/Hoverable.jsx';
+import JourneyNav from '../components/JourneyNav.jsx';
 import { sx } from '../utils/sx.js';
 
 function findFinish(opts, val) { return opts.find((o) => o[0] === val) || null; }
 
 export default function FurniturePage({ headFont }) {
-  const navigate = useNavigate();
   const {
     state, setFurnitureTab, openFurnitureDetail, removeFurnitureItem, nextFromFurniture, handleAdminImageChange,
     loadFurnitureItems, openFurnitureEditor, openNewFurnitureItem, quickSaveFurnitureImage, seedFurnitureCatalog,
@@ -83,11 +81,11 @@ export default function FurniturePage({ headFont }) {
         </div>
       )}
 
-      <div className="nad-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
+      <div className="nad-grid-2 nad-swipe-row nad-swipe-row-lg" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }}>
         {remoteLoading
           ? Array.from({ length: 4 }).map((_, i) => (
               <div key={i} style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: 16, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }} aria-hidden="true">
-                <div style={{ background: 'repeating-linear-gradient(135deg, oklch(92% 0.015 78) 0px, oklch(92% 0.015 78) 10px, oklch(87% 0.02 72) 10px, oklch(87% 0.02 72) 20px)' }} />
+                <div className="nad-skeleton" />
                 <div style={{ padding: 16 }}>
                   <div style={{ height: 14, width: '60%', background: 'var(--border)', borderRadius: 4, marginBottom: 8 }} />
                   <div style={{ height: 11, width: '85%', background: 'var(--border)', borderRadius: 4 }} />
@@ -122,10 +120,7 @@ export default function FurniturePage({ headFont }) {
           ))}
         </div>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 36 }}>
-        <Hoverable as="button" type="button" style="font-size:14px;font-weight:600;color:var(--text);background:transparent;border:1px solid var(--border);padding:13px 26px;border-radius:100px;cursor:pointer;transition:transform .18s ease,background .18s ease;" hoverStyle="transform:translateY(-2px);background:var(--border);" onClick={() => navigate('/design/materials')}>{T.common.back}</Hoverable>
-        <Hoverable as="button" type="button" style="font-size:14.5px;font-weight:600;color:var(--btn-text);background:var(--btn-bg);border:none;padding:14px 30px;border-radius:100px;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;" hoverStyle="transform:translateY(-2px);box-shadow:0 10px 22px -8px oklch(20% 0.02 50 / 0.4);filter:brightness(1.08);" onClick={nextFromFurniture}>{T.common.next}</Hoverable>
-      </div>
+      <JourneyNav backTo="materials" onNext={nextFromFurniture} />
       <FurnitureEditModal />
     </section>
   );

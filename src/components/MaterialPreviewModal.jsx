@@ -23,6 +23,7 @@ export default function MaterialPreviewModal() {
 
   return (
     <div
+      className="nad-modal-overlay"
       style={{ position: 'fixed', inset: 0, background: 'oklch(20% 0.02 50 / 0.55)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       onClick={closeMaterialDetail}
       role="dialog"
@@ -31,8 +32,10 @@ export default function MaterialPreviewModal() {
     >
       <div
         onClick={(e) => e.stopPropagation()}
+        className="nad-modal-panel"
         style={{ background: 'oklch(100% 0 0 / 0.5)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', border: '1px solid oklch(100% 0 0 / 0.6)', boxShadow: '0 20px 50px -12px oklch(20% 0.02 50 / 0.45)', borderRadius: 18, padding: 30, maxWidth: 440, width: '90%' }}
       >
+        <div className="nad-sheet-handle" aria-hidden="true" />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>
           <div style={{ fontFamily: "'Century Gothic', 'Futura', sans-serif", fontSize: 22, color: 'oklch(18% 0.02 50)' }}>{name}</div>
           <button type="button" onClick={closeMaterialDetail} style={{ cursor: 'pointer', fontSize: 13, color: 'oklch(32% 0.02 55)', background: 'none', border: 'none', padding: 0 }}>{T.common.close}</button>

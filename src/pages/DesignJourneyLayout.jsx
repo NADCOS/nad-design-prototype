@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../hooks/useAppState.js';
 import { STEP_KEYS } from '../data/navigation.js';
 import ProjectProgress from '../components/ProjectProgress.jsx';
+import SelectionsRail from '../components/SelectionsRail.jsx';
 import MaterialPreviewModal from '../components/MaterialPreviewModal.jsx';
 import FurnitureCustomizer from '../components/FurnitureCustomizer.jsx';
 
@@ -22,10 +23,16 @@ export default function DesignJourneyLayout({ step, children }) {
 
   if (!state.role || idx > state.maxStepIndex) return null;
 
+  // Rail only on the selection steps — summary/generate have their own layouts.
+  const showRail = step !== 'summary' && step !== 'generate';
+
   return (
     <div data-screen-label="Journey" className="nad-page" style={{ maxWidth: 1240, margin: '0 auto', padding: '0 28px 60px' }}>
       <ProjectProgress current={step} />
-      {children}
+      <div className={showRail ? 'nad-journey-grid' : undefined}>
+        <div key={step} style={{ animation: 'nad-fade-up .3s ease both', minWidth: 0 }}>{children}</div>
+        {showRail && <SelectionsRail />}
+      </div>
       <MaterialPreviewModal />
       <FurnitureCustomizer />
     </div>

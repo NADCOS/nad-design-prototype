@@ -33,8 +33,9 @@ export default function FurnitureCustomizer() {
   );
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'oklch(20% 0.02 50 / 0.4)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={closeFurnitureDetail} role="dialog" aria-modal="true" aria-label={item.name}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--surface)', borderRadius: 18, padding: 30, maxWidth: 460, width: '90%', maxHeight: '86vh', overflow: 'auto' }}>
+    <div className="nad-modal-overlay" style={{ position: 'fixed', inset: 0, background: 'oklch(20% 0.02 50 / 0.4)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={closeFurnitureDetail} role="dialog" aria-modal="true" aria-label={item.name}>
+      <div onClick={(e) => e.stopPropagation()} className="nad-modal-panel" style={{ background: 'var(--surface)', borderRadius: 18, padding: 30, maxWidth: 460, width: '90%', maxHeight: '86vh', overflow: 'auto' }}>
+        <div className="nad-sheet-handle" aria-hidden="true" />
         <EditableImage slotId={slotId} placeholder={item.name} prefillSrc={item.imageUrl || ''} aspect="4/3" isAdmin={isAdmin} overrideUrl={overrideUrl} onAdminImageChange={(e) => handleAdminImageChange(slotId, e)} editLabel={T.common.edit} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', margin: '16px 0' }}>
           <div>

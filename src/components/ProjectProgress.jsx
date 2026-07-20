@@ -12,7 +12,17 @@ export default function ProjectProgress({ current }) {
   const curIdx = STEP_KEYS.indexOf(current);
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '26px 0 34px', overflowX: 'auto' }} role="navigation" aria-label="Design journey progress">
+    <>
+    <div className="nad-progress-compact" style={{ padding: '18px 0 20px' }} role="navigation" aria-label="Design journey progress">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8, gap: 12 }}>
+        <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{T.steps[curIdx]}</span>
+        <span style={{ fontSize: 12.5, color: 'var(--text-2)', fontWeight: 600, whiteSpace: 'nowrap' }}>{(curIdx + 1) + ' / ' + STEP_KEYS.length}</span>
+      </div>
+      <div style={{ height: 5, borderRadius: 100, background: 'var(--border)', overflow: 'hidden' }}>
+        <div style={{ width: (((curIdx + 1) / STEP_KEYS.length) * 100) + '%', height: '100%', background: 'oklch(64% 0.10 68)', borderRadius: 100, transition: 'width .3s ease' }} />
+      </div>
+    </div>
+    <div className="nad-progress-full" style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '26px 0 34px', overflowX: 'auto' }} role="navigation" aria-label="Design journey progress">
       {STEP_KEYS.map((key, i) => {
         const active = i === curIdx;
         const reachable = i <= state.maxStepIndex;
@@ -39,5 +49,6 @@ export default function ProjectProgress({ current }) {
         );
       })}
     </div>
+    </>
   );
 }

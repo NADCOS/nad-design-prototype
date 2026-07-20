@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../hooks/useAppState.js';
 import { STRINGS } from '../data/translations.js';
 import { MATERIAL_CATEGORIES, PREFILL_MATERIAL_IMAGES, materialSlotId } from '../data/materials.js';
 import { STYLE_RECS } from '../data/styles.js';
 import MaterialCard from '../components/MaterialCard.jsx';
-import Hoverable from '../components/Hoverable.jsx';
+import JourneyNav from '../components/JourneyNav.jsx';
 import { sx } from '../utils/sx.js';
 
 export default function MaterialsPage() {
-  const navigate = useNavigate();
   const { state, setMaterialTab, chooseMaterial, openMaterialDetail, removeFromBoard, nextFromMaterials, handleAdminImageChange } = useAppState();
   const [tab, setTab] = useState(state.materialTab || 'flooring');
   const [hoverItem, setHoverItem] = useState(null);
@@ -39,7 +37,7 @@ export default function MaterialsPage() {
         })}
       </div>
       <div className="nad-grid-split" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 24, alignItems: 'start', marginBottom: 8 }}>
-        <div className="nad-grid-5" style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 14 }}>
+        <div className="nad-grid-5 nad-swipe-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 14 }}>
           {activeCat.items.map((item) => {
             const chosen = state.selections.materials[activeCat.key] && state.selections.materials[activeCat.key].en === item[0];
             const slotId = materialSlotId(activeCat.key, item[0]);
@@ -56,7 +54,7 @@ export default function MaterialsPage() {
             );
           })}
         </div>
-        <div style={{ position: 'sticky', top: 90, borderRadius: 16, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--border)' }}>
+        <div className="nad-mat-preview" style={{ position: 'sticky', top: 90, borderRadius: 16, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--border)' }}>
           <div style={{ aspectRatio: '4/3', position: 'relative', background: 'oklch(90% 0.02 75)' }}>
             {previewSrc && (
               <img src={previewSrc} alt={previewItem ? previewItem[lang === 'ar' ? 1 : 0] || previewItem.en : ''} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -86,10 +84,7 @@ export default function MaterialsPage() {
           ))}
         </div>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 36 }}>
-        <Hoverable as="button" type="button" style="font-size:14px;font-weight:600;color:var(--text);background:transparent;border:1px solid var(--border);padding:13px 26px;border-radius:100px;cursor:pointer;transition:transform .18s ease,background .18s ease;" hoverStyle="transform:translateY(-2px);background:var(--border);" onClick={() => navigate('/design/style')}>{T.common.back}</Hoverable>
-        <Hoverable as="button" type="button" style="font-size:14.5px;font-weight:600;color:var(--btn-text);background:var(--btn-bg);border:none;padding:14px 30px;border-radius:100px;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;" hoverStyle="transform:translateY(-2px);box-shadow:0 10px 22px -8px oklch(20% 0.02 50 / 0.4);filter:brightness(1.08);" onClick={nextFromMaterials}>{T.common.next}</Hoverable>
-      </div>
+      <JourneyNav backTo="style" onNext={nextFromMaterials} />
     </section>
   );
 }

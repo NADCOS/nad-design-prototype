@@ -100,7 +100,7 @@ export function AppStateProvider({ children }) {
     furnitureRemote: [], furnitureStatus: 'idle', furnitureError: null,
     editingFurnitureItem: null, furnitureItemIsNew: false, furnitureSaving: false, furnitureSaveError: null, furnitureSaveSuccess: false,
     activityStats: { monthly: [], yearly: [], funnel: [] }, activityStatsStatus: 'idle',
-    resumeProject: null, adminGuestProjects: [],
+    resumeProject: null, adminGuestProjects: [], lastSavedAt: null,
   });
   const toastTimer = useRef(null);
   const stateRef = useRef(null);
@@ -135,12 +135,12 @@ export function AppStateProvider({ children }) {
         savedAt: new Date().toISOString(),
       };
       if (isSupabaseConfigured) {
-        fetch('/api/guest-projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifier: s.currentGuestIdentifier, data: payload, maxStepIndex: s.maxStepIndex }) }).catch(() => {});
+        fetch('/api/guest-projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifier: s.currentGuestIdentifier, data: payload, maxStepIndex: s.maxStepIndex }) }).then((r) => { if (r.ok) patch({ lastSavedAt: Date.now() }); }).catch(() => {});
       } else {
-        try { localStorage.setItem('nad_guest_project::' + s.currentGuestIdentifier.trim().toLowerCase(), JSON.stringify(payload)); } catch (e) {}
+        try { localStorage.setItem('nad_guest_project::' + s.currentGuestIdentifier.trim().toLowerCase(), JSON.stringify(payload)); patch({ lastSavedAt: Date.now() }); } catch (e) {}
       }
     }, 80);
-  }, []);
+  }, [patch]);
 
   // On login / reload: fetch any saved journey for this guest and surface a
   // "resume where you left off" banner on the home page.

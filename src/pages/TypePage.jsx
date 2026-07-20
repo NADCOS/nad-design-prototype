@@ -5,7 +5,7 @@ import { PROJECT_TYPES, PREFILL_PROJECT_IMAGES } from '../data/projectTypes.js';
 import { isSupabaseConfigured } from '../lib/supabase.js';
 import ProjectTypeCard from '../components/ProjectTypeCard.jsx';
 import ProjectTypeEditModal from '../components/ProjectTypeEditModal.jsx';
-import Hoverable from '../components/Hoverable.jsx';
+import JourneyNav from '../components/JourneyNav.jsx';
 
 export default function TypePage() {
   const { state, selectProjectType, setCustomType, nextFromType, handleAdminImageChange, loadProjectTypes, openProjectTypeEditor, quickSaveProjectTypeImage } = useAppState();
@@ -45,8 +45,6 @@ export default function TypePage() {
   const selectedKey = state.selections.projectType && state.selections.projectType.key;
   const isCustomTypeSelected = !!(state.selections.projectType && (state.selections.projectType.key === 'custom' || /custom/i.test(state.selections.projectType.en || '')));
   const canProceedType = !!state.selections.projectType;
-  const btn = (enabled) => 'font-size:14.5px;font-weight:600;color:var(--btn-text);background:' + (enabled ? 'var(--btn-bg)' : 'var(--border)') + ';border:none;padding:14px 30px;border-radius:100px;cursor:' + (enabled ? 'pointer' : 'not-allowed') + ';transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;';
-  const btnHover = (enabled) => (enabled ? 'transform:translateY(-2px);box-shadow:0 10px 22px -8px oklch(20% 0.02 50 / 0.4);filter:brightness(1.08);' : '');
 
   function handleSelect(card) {
     selectProjectType({ key: card.key, en: card.name, ar: card.name });
@@ -74,7 +72,7 @@ export default function TypePage() {
         {remoteLoading
           ? Array.from({ length: 8 }).map((_, i) => (
               <div key={i} style={{ borderRadius: 14, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--border)' }} aria-hidden="true">
-                <div style={{ aspectRatio: '4/3', background: 'repeating-linear-gradient(135deg, oklch(92% 0.015 78) 0px, oklch(92% 0.015 78) 10px, oklch(87% 0.02 72) 10px, oklch(87% 0.02 72) 20px)' }} />
+                <div className="nad-skeleton" style={{ aspectRatio: '4/3' }} />
                 <div style={{ padding: '14px 16px 16px' }}>
                   <div style={{ height: 14, width: '60%', background: 'var(--border)', borderRadius: 4, marginBottom: 8 }} />
                   <div style={{ height: 11, width: '85%', background: 'var(--border)', borderRadius: 4 }} />
@@ -106,9 +104,7 @@ export default function TypePage() {
           <textarea id="nad-custom-type" value={state.customTypeText} onChange={setCustomType} placeholder={T.type.customPh} rows={3} style={{ width: '100%', maxWidth: 640, padding: '14px 16px', borderRadius: 10, border: '1px solid oklch(75% 0.02 70)', background: 'var(--surface)', fontSize: 14, color: 'var(--text)', resize: 'vertical' }} />
         </div>
       )}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 36 }}>
-        <Hoverable as="button" type="button" disabled={!canProceedType} style={btn(canProceedType)} hoverStyle={btnHover(canProceedType)} onClick={nextFromType}>{T.common.next}</Hoverable>
-      </div>
+      <JourneyNav onNext={nextFromType} nextDisabled={!canProceedType} />
       <ProjectTypeEditModal />
     </section>
   );
