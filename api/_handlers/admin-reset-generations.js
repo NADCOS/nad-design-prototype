@@ -1,8 +1,8 @@
 // NAD Design — POST /api/admin-reset-generations
 // Admin-only: clears a guest's generation_logs rows so they can generate
 // again immediately (the daily cap counts rows since UTC midnight).
-import { requireAdmin } from './_lib/verifyAdmin.js';
-import { getSupabaseAdmin } from './_lib/supabaseAdmin.js';
+import { requireAdmin } from '../_lib/verifyAdmin.js';
+import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

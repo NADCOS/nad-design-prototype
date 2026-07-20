@@ -4,6 +4,45 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/api/admin-activity-stats",
+      "destination": "/api/admin?action=admin-activity-stats"
+    },
+    {
+      "source": "/api/admin-generation-counts",
+      "destination": "/api/admin?action=admin-generation-counts"
+    },
+    {
+      "source": "/api/admin-login",
+      "destination": "/api/admin?action=admin-login"
+    },
+    {
+      "source": "/api/admin-registrations",
+      "destination": "/api/admin?action=admin-registrations"
+    },
+    {
+      "source": "/api/admin-reset-generations",
+      "destination": "/api/admin?action=admin-reset-generations"
+    },
+    {
+      "source": "/api/admin-site-data",
+      "destination": "/api/admin?action=admin-site-data"
+    },
+    {
+      "source": "/api/admin-suppliers",
+      "destination": "/api/admin?action=admin-suppliers"
+    },
+    {
+      "source": "/api/guest-lookup",
+      "destination": "/api/guest?action=guest-lookup"
+    },
+    {
+      "source": "/api/guest-projects",
+      "destination": "/api/guest?action=guest-projects"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
