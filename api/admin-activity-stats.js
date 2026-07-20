@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   }
   const supabaseAdmin = getSupabaseAdmin();
   if (!supabaseAdmin) {
-    res.status(200).json({ success: true, monthly: [], yearly: [] });
+    res.status(200).json({ success: true, monthly: [], yearly: [], funnel: [] });
     return;
   }
   try {
@@ -43,7 +43,19 @@ export default async function handler(req, res) {
       const y = now.getUTCFullYear() - i;
       yearly.push({ period: String(y), label: String(y), count: yearlyMap[String(y)] || 0 });
     }
-    res.status(200).json({ success: true, monthly, yearly });
+    // Funnel: journeys that reached each of the 8 design steps, derived from
+    // guest_projects.max_step_index (a journey at step N has reached 0..N).
+    const STEP_COUNT = 8;
+    const funnel = new Array(STEP_COUNT).fill(0);
+    try {
+      const { data: projects } = await supabaseAdmin.from('guest_projects').select('max_step_index').limit(10000);
+      (projects || []).forEach((p) => {
+        const reached = Math.max(0, Math.min(STEP_COUNT - 1, Number(p.max_step_index) || 0));
+        for (let i = 0; i <= reached; i++) funnel[i] += 1;
+      });
+    } catch (e) { /* table may not exist yet — funnel stays empty */ }
+
+    res.status(200).json({ success: true, monthly, yearly, funnel });
   } catch (err) {
     console.error('[admin-activity-stats] failed:', err);
     res.status(500).json({ success: false, error: 'Could not load activity stats.' });

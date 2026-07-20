@@ -5,6 +5,7 @@ import { STRINGS } from '../data/translations.js';
 import { DESIGN_LEVELS } from '../data/designLevels.js';
 import { sx } from '../utils/sx.js';
 import ActivityChart from '../components/ActivityChart.jsx';
+import FunnelChart from '../components/FunnelChart.jsx';
 
 const inputSm = 'padding:12px 14px;border-radius:10px;border:1px solid oklch(75% 0.02 70);background:var(--surface);font-size:14px;color:var(--text);width:100%;box-sizing:border-box;';
 
@@ -14,7 +15,7 @@ export default function AdminPage() {
     state, setAdminTab, setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone,
     addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,
     getLevelRangeFor, setPriceOverride, setConsultationStatus, removeConsultation, removeClient, setRegistrationStatus,
-    toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, loadActivityStats, loadRegistrations, loadSuppliers,
+    toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, loadActivityStats, loadRegistrations, loadSuppliers, loadGuestProjects,
   } = useAppState();
   const T = STRINGS[state.lang];
   const isAdmin = state.role === 'admin';
@@ -24,10 +25,32 @@ export default function AdminPage() {
   useEffect(() => { if (isAdmin) loadActivityStats(); }, [isAdmin, loadActivityStats]);
   useEffect(() => { if (isAdmin) loadRegistrations(); }, [isAdmin, loadRegistrations]);
   useEffect(() => { if (isAdmin) loadSuppliers(); }, [isAdmin, loadSuppliers]);
+  useEffect(() => { if (isAdmin) loadGuestProjects(); }, [isAdmin, loadGuestProjects]);
   if (!isAdmin) return null;
 
-  const tabs = ['overview', 'suppliers', 'pricing', 'consultations', 'clients', 'registrations'];
+  const tabs = ['overview', 'leads', 'suppliers', 'pricing', 'consultations', 'clients', 'registrations'];
   const registrationsSorted = [...state.adminRegistrations].reverse();
+
+  const projectByIdentifier = new Map();
+  state.adminGuestProjects.forEach((p) => { if (p.identifier) projectByIdentifier.set(String(p.identifier).toLowerCase(), p); });
+  const leads = state.adminRegistrations.map((rg) => {
+    const key = (rg.email || rg.phone || '').trim().toLowerCase();
+    const altKey = (rg.phone || '').trim().toLowerCase();
+    const proj = projectByIdentifier.get(key) || (altKey && projectByIdentifier.get(altKey)) || null;
+    const sel = proj && proj.selections ? proj.selections : {};
+    const stepIdx = proj ? Math.max(0, Math.min(T.steps.length - 1, Number(proj.maxStepIndex) || 0)) : -1;
+    const gens = state.generationCounts[key] || 0;
+    const budget = sel.projectInfo && sel.projectInfo.budget ? sel.projectInfo.budget : '';
+    const area = sel.projectInfo && sel.projectInfo.area ? sel.projectInfo.area : '';
+    let score = 0;
+    if (rg.status === 'verified') score += 2;
+    if (stepIdx >= 6) score += 3; else if (stepIdx >= 3) score += 2; else if (stepIdx >= 1) score += 1;
+    if (gens >= 3) score += 2; else if (gens >= 1) score += 1;
+    if (budget) score += 1;
+    if (sel.designLevel && (sel.designLevel.key === 'luxury' || sel.designLevel.key === 'highend')) score += 1;
+    const tier = score >= 6 ? 'hot' : score >= 3 ? 'warm' : 'cold';
+    return { rg, sel, stepIdx, gens, budget, area, score, tier, suspended: rg.suspended };
+  }).sort((a, b) => b.score - a.score);
 
   return (
     <main data-screen-label="Admin Dashboard" className="nad-page" style={{ maxWidth: 1160, margin: '0 auto', padding: '40px 28px 80px' }}>
@@ -58,6 +81,38 @@ export default function AdminPage() {
           ))}
         </div>
           <ActivityChart monthly={state.activityStats.monthly} yearly={state.activityStats.yearly} registrations={state.adminRegistrations} loading={state.activityStatsStatus === 'loading' && state.activityStats.monthly.length === 0} />
+          <FunnelChart funnel={state.activityStats.funnel} steps={T.steps} lang={state.lang} />
+        </>
+      )}
+
+      {state.adminTab === 'leads' && (
+        <>
+          <div style={{ fontSize: 12.5, color: 'var(--text-2)', marginBottom: 16 }}>{T.admin.leads.note}</div>
+          {leads.length === 0 && <div style={{ fontSize: 13.5, color: 'var(--text-2)', padding: '20px 0' }}>{T.admin.leads.empty}</div>}
+          {leads.length > 0 && (
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflowX: 'auto' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.2fr 1fr 0.9fr auto auto', minWidth: 880, gap: 14, padding: '12px 18px', fontSize: 11.5, fontWeight: 700, color: 'var(--text-2)', borderBottom: '1px solid var(--border)' }}>
+                <span>{T.admin.leads.contact}</span><span>{T.admin.leads.project}</span><span>{T.admin.leads.budget}</span><span>{T.admin.leads.progress}</span><span>{T.admin.registrations.generations}</span><span>{T.admin.leads.score}</span>
+              </div>
+              {leads.map(({ rg, sel, stepIdx, gens, budget, area, score, tier }) => {
+                const tierStyle = 'font-size:11px;font-weight:700;padding:3px 12px;border-radius:100px;white-space:nowrap;background:' + (tier === 'hot' ? 'oklch(90% 0.09 30)' : tier === 'warm' ? 'oklch(92% 0.06 80)' : 'var(--border)') + ';color:' + (tier === 'hot' ? 'oklch(38% 0.14 30)' : tier === 'warm' ? 'oklch(45% 0.08 70)' : 'oklch(45% 0.02 55)') + ';';
+                const projLabel = [sel.projectType && sel.projectType[state.lang], sel.designLevel && sel.designLevel[state.lang], sel.stylePrimary && sel.stylePrimary[state.lang]].filter(Boolean).join(' · ');
+                return (
+                  <div key={rg.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.2fr 1fr 0.9fr auto auto', minWidth: 880, gap: 14, alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
+                    <div>
+                      <div style={{ fontSize: 13, color: 'var(--text)', fontFamily: 'ui-monospace,monospace' }}>{rg.email || rg.phone || '\u2014'}</div>
+                      {rg.email && rg.phone && <div style={{ fontSize: 11.5, color: 'var(--text-2)', fontFamily: 'ui-monospace,monospace', marginTop: 2 }}>{rg.phone}</div>}
+                    </div>
+                    <div style={{ fontSize: 12.5, color: projLabel ? 'var(--text)' : 'var(--text-2)' }}>{projLabel || T.admin.leads.noJourney}</div>
+                    <div style={{ fontSize: 12.5, color: 'var(--text-2)' }}>{budget || '\u2014'}{area ? ' \u00b7 ' + area + ' m\u00b2' : ''}</div>
+                    <div style={{ fontSize: 12.5, color: 'var(--text-2)' }}>{stepIdx >= 0 ? ((stepIdx + 1) + '/' + T.steps.length + ' \u00b7 ' + T.steps[stepIdx]) : '\u2014'}</div>
+                    <div style={{ fontSize: 12.5, color: 'var(--text-2)', textAlign: 'center' }}><strong style={{ color: 'var(--text)' }}>{gens}</strong></div>
+                    <span style={sx(tierStyle)} title={'Score ' + score}>{T.admin.leads[tier]} · {score}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </>
       )}
 

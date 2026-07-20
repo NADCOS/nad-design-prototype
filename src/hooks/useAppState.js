@@ -8,6 +8,7 @@ import { DESIGN_LEVELS } from '../data/designLevels.js';
 import { FURNITURE_ITEMS } from '../data/furniture.js';
 import { STEP_KEYS } from '../data/navigation.js';
 import { STRINGS } from '../data/translations.js';
+import { STYLES } from '../data/styles.js';
 import { getLevelRange, computeCost, computeWarnings } from '../utils/pricing.js';
 import { generateDesign as requestNanoBananaDesign, getRemainingGenerations } from '../services/nanoBananaClient.js';
 import { buildStructuredPrompt } from '../utils/promptBuilder.js';
@@ -98,15 +99,18 @@ export function AppStateProvider({ children }) {
     editingProjectType: null, projectTypeSaving: false, projectTypeSaveError: null, projectTypeSaveSuccess: false,
     furnitureRemote: [], furnitureStatus: 'idle', furnitureError: null,
     editingFurnitureItem: null, furnitureItemIsNew: false, furnitureSaving: false, furnitureSaveError: null, furnitureSaveSuccess: false,
-    activityStats: { monthly: [], yearly: [] }, activityStatsStatus: 'idle',
+    activityStats: { monthly: [], yearly: [], funnel: [] }, activityStatsStatus: 'idle',
+    resumeProject: null, adminGuestProjects: [],
   });
   const toastTimer = useRef(null);
+  const stateRef = useRef(null);
 
   const patch = useCallback((updater) => setState((s) => ({ ...s, ...(typeof updater === 'function' ? updater(s) : updater) })), []);
+  useEffect(() => { stateRef.current = state; });
 
   useEffect(() => {
     try { const saved = localStorage.getItem('nad_role'); if (saved === 'admin' || saved === 'guest') patch({ role: saved }); } catch (e) {}
-    try { const savedIdentifier = localStorage.getItem('nad_guest_identifier'); if (savedIdentifier) patch({ currentGuestIdentifier: savedIdentifier }); } catch (e) {}
+    try { const savedIdentifier = localStorage.getItem('nad_guest_identifier'); if (savedIdentifier) { patch({ currentGuestIdentifier: savedIdentifier }); checkSavedProject(savedIdentifier); } } catch (e) {}
     try { const savedImages = JSON.parse(localStorage.getItem('nad_image_overrides') || '{}'); if (savedImages && typeof savedImages === 'object') patch({ imageOverrides: savedImages }); } catch (e) {}
     try { const savedTheme = localStorage.getItem('nad_theme'); if (savedTheme === 'dark' || savedTheme === 'light') patch({ theme: savedTheme }); } catch (e) {}
     if (!isSupabaseConfigured) {
@@ -115,6 +119,70 @@ export function AppStateProvider({ children }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Persist the guest's journey (selections + progress) so they can resume
+  // from any device. Runs shortly after state settles; upload images are
+  // stripped (names kept) to keep the payload small.
+  const saveGuestProject = useCallback(() => {
+    setTimeout(() => {
+      const s = stateRef.current;
+      if (!s || s.role !== 'guest' || !s.currentGuestIdentifier) return;
+      const sel = s.selections;
+      const payload = {
+        selections: { ...sel, uploads: (sel.uploads || []).map((u) => ({ name: u.name, isImage: u.isImage, dataUrl: null })) },
+        customTypeText: s.customTypeText,
+        maxStepIndex: s.maxStepIndex,
+        savedAt: new Date().toISOString(),
+      };
+      if (isSupabaseConfigured) {
+        fetch('/api/guest-projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifier: s.currentGuestIdentifier, data: payload, maxStepIndex: s.maxStepIndex }) }).catch(() => {});
+      } else {
+        try { localStorage.setItem('nad_guest_project::' + s.currentGuestIdentifier.trim().toLowerCase(), JSON.stringify(payload)); } catch (e) {}
+      }
+    }, 80);
+  }, []);
+
+  // On login / reload: fetch any saved journey for this guest and surface a
+  // "resume where you left off" banner on the home page.
+  const checkSavedProject = useCallback(async (identifier) => {
+    if (!identifier) return;
+    let payload = null;
+    if (isSupabaseConfigured) {
+      try {
+        const res = await fetch('/api/guest-projects?identifier=' + encodeURIComponent(identifier.trim().toLowerCase()));
+        const data = await res.json();
+        if (data && data.success && data.found) payload = data.project;
+      } catch (e) {}
+    } else {
+      try { payload = JSON.parse(localStorage.getItem('nad_guest_project::' + identifier.trim().toLowerCase()) || 'null'); } catch (e) {}
+    }
+    if (payload && payload.selections && (payload.maxStepIndex > 0 || payload.selections.projectType)) patch({ resumeProject: payload });
+  }, [patch]);
+
+  const resumeSavedProject = useCallback(() => {
+    const p = stateRef.current && stateRef.current.resumeProject;
+    if (!p) return;
+    const idx = Math.max(0, Math.min(STEP_KEYS.length - 1, Number(p.maxStepIndex) || 0));
+    patch((s) => ({
+      selections: { ...initialSelections, ...p.selections, uploads: [] },
+      customTypeText: p.customTypeText || s.customTypeText,
+      maxStepIndex: Math.max(s.maxStepIndex, idx),
+      resumeProject: null,
+    }));
+    navigate('/design/' + STEP_KEYS[idx]);
+  }, [patch, navigate]);
+
+  const dismissResume = useCallback(() => patch({ resumeProject: null }), [patch]);
+
+  const loadGuestProjects = useCallback(async () => {
+    if (!isSupabaseConfigured) return;
+    try {
+      const headers = await getAdminAuthHeaders();
+      const res = await fetch('/api/guest-projects', { headers });
+      const data = await res.json();
+      if (data && data.success) patch({ adminGuestProjects: data.projects || [] });
+    } catch (e) {}
+  }, [patch]);
 
   const toggleTheme = useCallback(() => setState((s) => {
     const next = s.theme === 'dark' ? 'light' : 'dark';
@@ -181,8 +249,9 @@ export function AppStateProvider({ children }) {
       loginIntent: null, guestLoginIdentifier: '', guestLoginError: '',
     }));
     showToast(lang === 'ar' ? STRINGS.ar.login.guestWelcomeBack : STRINGS.en.login.guestWelcomeBack);
+    checkSavedProject(match.email || match.phone || '');
     navigate(state.loginIntent ? '/design/' + state.loginIntent : '/');
-  }, [state.guestLoginIdentifier, state.lang, state.adminRegistrations, state.loginIntent, patch, navigate, showToast]);
+  }, [state.guestLoginIdentifier, state.lang, state.adminRegistrations, state.loginIntent, patch, navigate, showToast, checkSavedProject]);
 
   const registerGuest = useCallback(async () => {
     const email = state.guestEmail.trim();
@@ -248,7 +317,7 @@ export function AppStateProvider({ children }) {
     if (isSupabaseConfigured) {
       supabase.auth.signOut().catch(() => {});
     }
-    patch({ role: null, currentGuestIdentifier: null });
+    patch({ role: null, currentGuestIdentifier: null, resumeProject: null });
     navigate('/');
   }, [patch, navigate]);
 
@@ -330,7 +399,7 @@ export function AppStateProvider({ children }) {
   const loadActivityStats = useCallback(() => {
     patch({ activityStatsStatus: 'loading' });
     fetch('/api/admin-activity-stats').then((r) => r.json()).then((data) => {
-      if (data && data.success) patch({ activityStats: { monthly: data.monthly || [], yearly: data.yearly || [] }, activityStatsStatus: 'loaded' });
+      if (data && data.success) patch({ activityStats: { monthly: data.monthly || [], yearly: data.yearly || [], funnel: data.funnel || [] }, activityStatsStatus: 'loaded' });
       else patch({ activityStatsStatus: 'error' });
     }).catch(() => patch({ activityStatsStatus: 'error' }));
   }, [patch]);
@@ -447,8 +516,9 @@ export function AppStateProvider({ children }) {
   const advanceTo = useCallback((key) => {
     const idx = STEP_KEYS.indexOf(key);
     patch((s) => ({ maxStepIndex: Math.max(s.maxStepIndex, idx) }));
+    saveGuestProject();
     navigate('/design/' + key);
-  }, [patch, navigate]);
+  }, [patch, navigate, saveGuestProject]);
 
   const selectProjectType = useCallback((pt) => patch((s) => ({ selections: { ...s.selections, projectType: pt } })), [patch]);
   const setCustomType = useCallback((e) => patch({ customTypeText: e.target.value }), [patch]);
@@ -459,6 +529,16 @@ export function AppStateProvider({ children }) {
   const nextFromLevel = useCallback(() => advanceTo('style'), [advanceTo]);
 
   const selectPrimaryStyle = useCallback((st) => patch((s) => ({ selections: { ...s.selections, stylePrimary: st, styleSecondary: s.selections.styleSecondary && s.selections.styleSecondary.key === st.key ? null : s.selections.styleSecondary } })), [patch]);
+  const applyQuizStyles = useCallback((primaryKey, secondaryKey) => {
+    const find = (key) => {
+      const st = STYLES.find((x) => x.key === key);
+      return st ? { key: st.key, en: st.en, ar: st.ar } : null;
+    };
+    const primary = find(primaryKey);
+    if (!primary) return;
+    const secondary = secondaryKey && secondaryKey !== primaryKey ? find(secondaryKey) : null;
+    patch((s) => ({ selections: { ...s.selections, stylePrimary: primary, styleSecondary: secondary } }));
+  }, [patch]);
   const selectSecondaryStyle = useCallback((st) => patch((s) => ({ selections: { ...s.selections, styleSecondary: s.selections.styleSecondary && s.selections.styleSecondary.key === st.key ? null : st } })), [patch]);
   const nextFromStyle = useCallback(() => advanceTo('materials'), [advanceTo]);
 
@@ -550,10 +630,11 @@ export function AppStateProvider({ children }) {
     });
     if (result.success) {
       patch((s) => ({ generationStatus: 'done', generationVersion: (s.generationVersion || 0) + 1, generatedImageUrl: result.image, generationError: null }));
+      saveGuestProject();
     } else {
       patch({ generationStatus: 'error', generationError: result.error });
     }
-  }, [state, goToLogin, getAutoPrompt, patch]);
+  }, [state, goToLogin, getAutoPrompt, patch, saveGuestProject]);
   const regenerate = useCallback(() => generateDesign(), [generateDesign]);
   const resetGeneration = useCallback(() => patch({ generationStatus: 'idle', generatedImageUrl: null, generationError: null, promptDraft: null }), [patch]);
 
@@ -778,14 +859,15 @@ export function AppStateProvider({ children }) {
     toggleTheme, handleAdminImageChange,
     goToLogin, setLoginPasscode, setGuestEmail, setGuestPhone, registerGuest, loginAsAdmin, logout,
     setGuestPanelMode, setGuestLoginIdentifier, loginAsGuest,
-    goToAdmin, setAdminTab, setRegistrationStatus, toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, loadActivityStats, loadRegistrations, loadSuppliers,
+    goToAdmin, setAdminTab, setRegistrationStatus, toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, loadActivityStats, loadRegistrations, loadSuppliers, loadGuestProjects,
+    saveGuestProject, resumeSavedProject, dismissResume,
     getLevelRangeFor, setPriceOverride,
     setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone, addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,
     setConsultationStatus, removeConsultation, removeClient,
     goHome, goToStart, goToLevels, toggleLang, goToStep, advanceTo,
     selectProjectType, setCustomType, nextFromType,
     selectLevel, toggleCompare, nextFromLevel,
-    selectPrimaryStyle, selectSecondaryStyle, nextFromStyle,
+    selectPrimaryStyle, selectSecondaryStyle, nextFromStyle, applyQuizStyles,
     setMaterialTab, openMaterialDetail, closeMaterialDetail, chooseMaterial, saveMaterialToBoard, removeFromBoard, nextFromMaterials,
     setFurnitureTab, openFurnitureDetail, closeFurnitureDetail, setDraftFinish, addFurnitureToDesign, removeFurnitureItem, nextFromFurniture,
     handleFileUpload, removeUpload, setProjectInfoField, nextFromUpload,

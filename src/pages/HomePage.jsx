@@ -6,13 +6,28 @@ import Hoverable from '../components/Hoverable.jsx';
 import DesignLevelCard from '../components/DesignLevelCard.jsx';
 
 export default function HomePage({ headFont }) {
-  const { state, goToStart, goToLevels, getLevelRangeFor, handleAdminImageChange } = useAppState();
+  const { state, goToStart, goToLevels, getLevelRangeFor, handleAdminImageChange, resumeSavedProject, dismissResume } = useAppState();
   const lang = state.lang;
   const T = STRINGS[lang];
   const journeyList = T.steps.map((label, i) => ({ num: (i + 1 < 10 ? '0' : '') + (i + 1), label }));
+  const rp = state.resumeProject;
+  const resumeStepLabel = rp ? T.steps[Math.max(0, Math.min(T.steps.length - 1, Number(rp.maxStepIndex) || 0))] : '';
+  const resumeTypeLabel = rp && rp.selections && rp.selections.projectType ? rp.selections.projectType[lang] : '';
 
   return (
     <main data-screen-label="Home" className="nad-page" style={{ maxWidth: 1240, margin: '0 auto', padding: '0 28px' }}>
+      {rp && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', background: 'var(--surface)', border: '1px solid oklch(64% 0.10 68)', borderRadius: 14, padding: '16px 20px', marginTop: 22 }}>
+          <div>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--text)' }}>{T.resume.title}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 3 }}>{T.resume.sub.replace('{type}', resumeTypeLabel || T.resume.genericProject).replace('{step}', resumeStepLabel)}</div>
+          </div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <Hoverable as="button" type="button" style="font-size:13.5px;font-weight:600;color:var(--btn-text);background:var(--btn-bg);border:none;padding:12px 24px;border-radius:100px;cursor:pointer;white-space:nowrap;transition:transform .18s ease,filter .18s ease;" hoverStyle="transform:translateY(-2px);filter:brightness(1.08);" onClick={resumeSavedProject}>{T.resume.cta}</Hoverable>
+            <Hoverable as="button" type="button" style="font-size:13px;font-weight:600;color:var(--text-2);background:transparent;border:1px solid var(--border);padding:12px 18px;border-radius:100px;cursor:pointer;white-space:nowrap;transition:background .18s ease;" hoverStyle="background:var(--border);" onClick={dismissResume}>{T.resume.dismiss}</Hoverable>
+          </div>
+        </div>
+      )}
       <section className="nad-grid-hero" style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 56, alignItems: 'center', padding: '88px 0 64px' }}>
         <div style={{ animation: 'nad-fade-up 0.6s ease both' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'oklch(46% 0.09 60)', fontWeight: 600, marginBottom: 22 }}>
