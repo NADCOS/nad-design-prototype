@@ -41,7 +41,7 @@ body { overflow-x: hidden; }
 :focus-visible { outline: 2px solid oklch(64% 0.10 68); outline-offset: 2px; }
 .nad-skeleton { background: linear-gradient(90deg, oklch(92% 0.015 78) 25%, oklch(96.5% 0.01 80) 37%, oklch(92% 0.015 78) 63%) !important; background-size: 400px 100% !important; animation: nad-shimmer 1.2s linear infinite; }
 .nad-nav-mobile { display: none !important; }
-.nad-journey-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); padding-inline: max(16px, calc((100% - 1240px) / 2 + 28px)); background: var(--nav-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--border); }
+.nad-journey-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; box-shadow: 0 -6px 24px -12px oklch(20% 0.02 50 / 0.35); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); padding-inline: max(16px, calc((100% - 1240px) / 2 + 28px)); background: var(--nav-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid var(--border); }
 .nad-journey-nav-spacer { display: block; height: 92px; }
 body:has(.nad-journey-nav) .nad-whatsapp-fab { bottom: 100px !important; }
 body:has(.nad-journey-nav) .nad-toast { bottom: 100px !important; }

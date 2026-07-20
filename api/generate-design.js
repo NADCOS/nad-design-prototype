@@ -13,7 +13,7 @@ const MAX_PROMPT_LENGTH = 6000;
 // Per-guest daily cap, enforced server-side against the generation_logs table
 // so it can't be bypassed by refreshing the page or clearing sessionStorage
 // (unlike the client-side per-session counter in nanoBananaClient.js).
-const DAILY_LIMIT_PER_GUEST = Number(process.env.GENERATION_DAILY_LIMIT) || 5;
+const DAILY_LIMIT_PER_GUEST = Number(process.env.GENERATION_DAILY_LIMIT) || 10;
 const MAX_UPLOAD_BYTES = 7 * 1024 * 1024; // 7MB
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const VALID_ASPECT_RATIOS = ['16:9', '4:3', '1:1', '9:16', '3:2'];

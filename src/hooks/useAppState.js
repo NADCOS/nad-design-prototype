@@ -466,6 +466,23 @@ export function AppStateProvider({ children }) {
       if (data && data.success) patch({ generationCounts: data.counts || {} });
     }).catch(() => {});
   }, [patch]);
+  // Admin: clear a guest's generation history so their daily cap starts fresh.
+  const resetGuestGenerations = useCallback(async (identifier) => {
+    const id = (identifier || '').trim().toLowerCase();
+    if (!id) return;
+    try {
+      const headers = { 'Content-Type': 'application/json', ...(await getAdminAuthHeaders()) };
+      const res = await fetch('/api/admin-reset-generations', { method: 'POST', headers, body: JSON.stringify({ identifier: id }) });
+      const data = await res.json().catch(() => null);
+      if (data && data.success) {
+        patch((s) => { const next = { ...s.generationCounts }; delete next[id]; return { generationCounts: next, toast: 'Generations reset \u2014 this client can generate again.' }; });
+      } else {
+        patch({ toast: (data && data.error) || 'Could not reset generations.' });
+      }
+    } catch (e) {
+      patch({ toast: 'Could not reset generations.' });
+    }
+  }, [patch]);
   const loadActivityStats = useCallback(() => {
     patch({ activityStatsStatus: 'loading' });
     fetch('/api/admin-activity-stats').then((r) => r.json()).then((data) => {
@@ -938,7 +955,7 @@ export function AppStateProvider({ children }) {
     toggleTheme, handleAdminImageChange,
     goToLogin, setLoginPasscode, setGuestEmail, setGuestPhone, registerGuest, loginAsAdmin, logout,
     setGuestPanelMode, setGuestLoginIdentifier, loginAsGuest,
-    goToAdmin, setAdminTab, setRegistrationStatus, toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, loadActivityStats, loadRegistrations, loadSuppliers, loadGuestProjects, loadSiteData,
+    goToAdmin, setAdminTab, setRegistrationStatus, toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, resetGuestGenerations, loadActivityStats, loadRegistrations, loadSuppliers, loadGuestProjects, loadSiteData,
     saveGuestProject, resumeSavedProject, dismissResume,
     getLevelRangeFor, setPriceOverride,
     setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone, addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,

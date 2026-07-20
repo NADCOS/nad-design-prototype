@@ -27,7 +27,7 @@ export const AI_GENERATION_CONFIG = {
   allowedImageMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
 
   // Prototype usage limits (client-side, per browser session — see nanoBananaClient.js)
-  maxGenerationsPerSession: 3,
+  maxGenerationsPerSession: 10,
   cooldownMs: 8000,
 };
 

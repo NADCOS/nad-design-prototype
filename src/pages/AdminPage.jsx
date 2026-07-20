@@ -15,7 +15,7 @@ export default function AdminPage() {
     state, setAdminTab, setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone,
     addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,
     getLevelRangeFor, setPriceOverride, setConsultationStatus, removeConsultation, removeClient, setRegistrationStatus,
-    toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, loadActivityStats, loadRegistrations, loadSuppliers, loadGuestProjects, loadSiteData,
+    toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, resetGuestGenerations, loadActivityStats, loadRegistrations, loadSuppliers, loadGuestProjects, loadSiteData,
   } = useAppState();
   const T = STRINGS[state.lang];
   const isAdmin = state.role === 'admin';
@@ -227,7 +227,8 @@ export default function AdminPage() {
           <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, overflowX: 'auto' }}>
             {registrationsSorted.map((rg) => {
               const statusStyle = 'font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;background:' + (rg.suspended ? 'oklch(90% 0.10 30)' : rg.status === 'verified' ? 'oklch(90% 0.06 145)' : 'oklch(92% 0.05 80)') + ';color:' + (rg.suspended ? 'oklch(38% 0.14 30)' : rg.status === 'verified' ? 'oklch(35% 0.08 145)' : 'oklch(45% 0.08 70)') + ';';
-              const genCount = state.generationCounts[((rg.email || rg.phone || '').trim().toLowerCase())] || 0;
+              const genIdentifier = (rg.email || rg.phone || '').trim().toLowerCase();
+              const genCount = state.generationCounts[genIdentifier] || 0;
               return (
                 <div key={rg.id} style={{ display: 'grid', gridTemplateColumns: '1.4fr 1.1fr 1fr auto auto auto', minWidth: 700, gap: 14, alignItems: 'center', padding: '14px 18px', borderBottom: '1px solid var(--border)' }}>
                   <div style={{ fontSize: 13, color: 'var(--text)', fontFamily: 'ui-monospace,monospace' }}>{rg.email || '\u2014'}</div>
@@ -238,6 +239,7 @@ export default function AdminPage() {
                   <span style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                     {!rg.suspended && rg.status !== 'verified' && <button type="button" style={{ fontSize: 12, fontWeight: 600, color: 'oklch(35% 0.08 145)', cursor: 'pointer', whiteSpace: 'nowrap', background: 'none', border: 'none', padding: 0 }} onClick={() => setRegistrationStatus(rg.id, 'verified')}>{T.admin.registrations.verify}</button>}
                     {!rg.suspended && rg.status === 'verified' && <button type="button" style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)', cursor: 'pointer', whiteSpace: 'nowrap', background: 'none', border: 'none', padding: 0 }} onClick={() => setRegistrationStatus(rg.id, 'pending')}>{T.admin.registrations.markPending}</button>}
+                    {genCount > 0 && <button type="button" title="Clear this client's generation history so they can generate images again today" style={{ fontSize: 12, fontWeight: 600, color: 'oklch(45% 0.10 230)', cursor: 'pointer', whiteSpace: 'nowrap', background: 'none', border: 'none', padding: 0 }} onClick={() => resetGuestGenerations(genIdentifier)}>Reset generations</button>}
                     <button type="button" style={{ fontSize: 12, fontWeight: 600, color: 'oklch(50% 0.12 30)', cursor: 'pointer', whiteSpace: 'nowrap', background: 'none', border: 'none', padding: 0 }} onClick={() => toggleRegistrationSuspended(rg.id)}>{rg.suspended ? T.admin.registrations.unsuspend : T.admin.registrations.suspend}</button>
                   </span>
                 </div>
