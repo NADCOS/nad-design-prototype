@@ -31,9 +31,13 @@ export default function HomePage({ headFont }) {
       <section className="nad-grid-hero" style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 56, alignItems: 'center', padding: '88px 0 64px' }}>
         <div style={{ animation: 'nad-fade-up 0.6s ease both' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'oklch(46% 0.09 60)', fontWeight: 600, marginBottom: 22 }}>
-            <span style={{ width: 22, height: 1, background: 'oklch(46% 0.09 60)' }} aria-hidden="true" />{T.home.kicker}
+            <span style={{ width: 22, height: 1, background: 'oklch(46% 0.09 60)', animation: 'nad-grow-line .8s ease both', transformOrigin: lang === 'ar' ? 'right' : 'left' }} aria-hidden="true" />{T.home.kicker}
           </div>
-          <h1 style={{ fontFamily: headFont, fontSize: 52, lineHeight: 1.08, color: 'var(--text)', margin: '0 0 22px', fontWeight: 500 }}>{T.home.headline}</h1>
+          <h1 style={{ fontFamily: headFont, fontSize: 52, lineHeight: 1.08, color: 'var(--text)', margin: '0 0 22px', fontWeight: 500 }} aria-label={T.home.headline}>
+            {(lang === 'ar' ? T.home.headline.split(' ') : T.home.headline.split('')).map((part, i, arr) => (
+              <span key={i} aria-hidden="true" style={{ display: 'inline-block', whiteSpace: 'pre', animation: 'nad-letter-in .55s ease both', animationDelay: (0.15 + i * (lang === 'ar' ? 0.07 : 0.028)) + 's' }}>{part}{lang === 'ar' && i < arr.length - 1 ? ' ' : ''}</span>
+            ))}
+          </h1>
           <p style={{ fontSize: 17, lineHeight: 1.6, color: 'var(--text-2)', maxWidth: 480, margin: '0 0 34px' }}>{T.home.sub}</p>
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
             <Hoverable as="button" type="button" style="font-size:14.5px;font-weight:600;color:var(--btn-text);background:var(--btn-bg);border:none;padding:15px 28px;border-radius:100px;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;" hoverStyle="transform:translateY(-2px);box-shadow:0 10px 22px -8px oklch(20% 0.02 50 / 0.4);filter:brightness(1.08);" onClick={goToStart}>{T.home.ctaPrimary}</Hoverable>
@@ -49,7 +53,7 @@ export default function HomePage({ headFont }) {
         <h2 style={{ fontFamily: headFont, fontSize: 15, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-2)', margin: '36px 0 26px', fontWeight: 500 }}>{T.home.journeyTitle}</h2>
         <div style={{ display: 'flex', gap: 0, flexWrap: 'wrap' }}>
           {journeyList.map((js, i) => (
-            <div key={i} style={{ flex: 1, minWidth: 110, padding: '16px 14px 16px 0', position: 'relative' }}>
+            <div key={i} style={{ flex: 1, minWidth: 110, padding: '16px 14px 16px 0', position: 'relative', animation: 'nad-fade-up .5s ease both', animationDelay: (i * 0.07) + 's' }}>
               <div style={{ fontFamily: headFont, fontSize: 22, color: 'oklch(64% 0.10 68)', marginBottom: 8 }}>{js.num}</div>
               <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--text)' }}>{js.label}</div>
             </div>

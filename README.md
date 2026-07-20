@@ -132,6 +132,15 @@ The AI Generation page calls `POST /api/generate-design`, a Vercel serverless fu
 
 **Never** prefix these with `VITE_` — anything prefixed `VITE_` is inlined into the public JS bundle. `GEMINI_API_KEY` must only ever be read inside `api/_lib/nanoBanana.js`.
 
+### Using EvoLink instead of Google (nano-banana-beta)
+
+Set `EVOLINK_API_KEY` (from https://evolink.ai/dashboard/keys) in Vercel env vars and `/api/generate-design` automatically routes through EvoLink's `POST /v1/images/generations` async API instead of Google — no code change. Notes:
+
+- `EVOLINK_MODEL` defaults to `nano-banana-beta` (Gemini 2.5 Flash Image, ~$0.02/image, occasional downtime). Set it to `nano-banana` for the 99.9%-uptime tier.
+- Image-editing mode (user uploads a room photo) requires a **private Supabase Storage bucket named `generation-inputs`** — EvoLink only accepts fetchable URLs, so the server uploads the photo there and passes a 1-hour signed URL. Create the bucket in Supabase Studio → Storage (no public access needed; the service role key signs URLs).
+- Generation is polled server-side (up to ~100s); `api/generate-design.js` sets `maxDuration: 120`. If your Vercel plan rejects that at deploy time, lower it to 60.
+- The result image is downloaded server-side and returned as a base64 data URL, so the 24-hour expiry of EvoLink's result links never reaches the client.
+
 ### Current mock/demo states
 
 - Without `GEMINI_API_KEY` set, `/api/generate-design` still validates every request (prompt length, image type/size) but returns a clear "AI design generator is not configured yet" error — the rest of the UI (loading state, error state, retry button) works exactly as it will in production.
@@ -149,6 +158,8 @@ The AI Generation page calls `POST /api/generate-design`, a Vercel serverless fu
 
 | Variable | Where it's read | Notes |
 |---|---|---|
+| `EVOLINK_API_KEY` | `api/_lib/evolink.js` only | Server-only secret. When set, generation routes via EvoLink. |
+| `EVOLINK_MODEL` | `api/_lib/evolink.js` only | Optional — defaults to `nano-banana-beta`. |
 | `GEMINI_API_KEY` | `api/_lib/nanoBanana.js` only | Server-only secret. Never in frontend code, never `.env.example`. |
 | `NANO_BANANA_MODEL` | `api/_lib/nanoBanana.js` only | Optional — defaults to `gemini-3.1-flash-image`. |
 | `ADMIN_PASSCODE` | `api/admin-login.js` only | Server-only. Without it, admin login always fails (previously the passcode was hardcoded client-side). |

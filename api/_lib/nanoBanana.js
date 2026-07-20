@@ -3,7 +3,7 @@
 // read here, on the server, and is never sent to the browser.
 import { GoogleGenAI } from '@google/genai';
 
-const MODEL = process.env.NANO_BANANA_MODEL || 'gemini-2.5-flash-image';
+const MODEL = process.env.NANO_BANANA_MODEL || 'gemini-3.1-flash-image';
 
 let client = null;
 function getClient() {

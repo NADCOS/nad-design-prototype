@@ -1,9 +1,13 @@
 // NAD Design — POST /api/generate-design
 // Secure Vercel serverless function: validates the request, calls Nano Banana
-// (Gemini 2.5 Flash Image) via api/_lib/nanoBanana.js, and returns a plain
+// (Gemini 3.1 Flash Image) via api/_lib/nanoBanana.js, and returns a plain
 // JSON result. GEMINI_API_KEY never leaves this file.
 import { generateWithNanoBanana } from './_lib/nanoBanana.js';
+import { generateWithEvoLink, evolinkConfigured } from './_lib/evolink.js';
 import { getSupabaseAdmin } from './_lib/supabaseAdmin.js';
+
+// Poll-based EvoLink generation can take a while — allow up to 2 minutes.
+export const config = { maxDuration: 120 };
 
 const MAX_PROMPT_LENGTH = 6000;
 // Per-guest daily cap, enforced server-side against the generation_logs table
@@ -104,7 +108,10 @@ export default async function handler(req, res) {
 
   // ---- generate ----
   try {
-    const result = await generateWithNanoBanana({
+    // Provider routing: EVOLINK_API_KEY set -> EvoLink (nano-banana-beta /
+    // Gemini 2.5 Flash Image); otherwise Google Gemini direct.
+    const generate = evolinkConfigured() ? generateWithEvoLink : generateWithNanoBanana;
+    const result = await generate({
       prompt,
       imageBase64: imageBase64 || undefined,
       imageMimeType: imageMimeType || 'image/jpeg',
@@ -129,6 +136,9 @@ export default async function handler(req, res) {
     if (code === 'MISSING_API_KEY') {
       status = 500;
       message = 'The AI design generator is not configured yet. Please contact NAD Design.';
+    } else if (code === 'IMAGE_UPLOAD_UNAVAILABLE' || code === 'IMAGE_UPLOAD_FAILED') {
+      status = 500;
+      message = 'The uploaded room photo could not be passed to the AI generator. Please contact NAD Design.';
     } else if (code === 'NO_OUTPUT_IMAGE') {
       status = 502;
       message = 'The AI generator did not return an image. Please try again.';
