@@ -21,6 +21,10 @@ export default function DesignJourneyLayout({ step, children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.role, state.maxStepIndex, step]);
 
+  // Phones keep the previous step's scroll position otherwise, so a new step
+  // can open mid-page with its title off-screen.
+  useEffect(() => { window.scrollTo(0, 0); }, [step]);
+
   if (!state.role || idx > state.maxStepIndex) return null;
 
   // Rail only on the selection steps — summary/generate have their own layouts.

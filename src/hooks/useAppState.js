@@ -7,7 +7,7 @@ import { SUPPLIERS } from '../data/suppliers.js';
 import { DESIGN_LEVELS } from '../data/designLevels.js';
 import { FURNITURE_ITEMS } from '../data/furniture.js';
 import { STEP_KEYS } from '../data/navigation.js';
-import { STRINGS } from '../data/translations.js';
+import { STRINGS, fmtSar } from '../data/translations.js';
 import { STYLES } from '../data/styles.js';
 import { getLevelRange, computeCost, computeWarnings } from '../utils/pricing.js';
 import { generateDesign as requestNanoBananaDesign, getRemainingGenerations } from '../services/nanoBananaClient.js';
@@ -115,6 +115,10 @@ export function AppStateProvider({ children }) {
     editingFurnitureItem: null, furnitureItemIsNew: false, furnitureSaving: false, furnitureSaveError: null, furnitureSaveSuccess: false,
     activityStats: { monthly: [], yearly: [], funnel: [] }, activityStatsStatus: 'idle',
     resumeProject: null, adminGuestProjects: [], lastSavedAt: null,
+    favorites: { materials: {}, furniture: {} },
+    generationHistory: [],
+    shareStatus: 'idle', shareUrl: null,
+    compareStyles: false, compareStatus: 'idle', compareResults: null,
   });
   const toastTimer = useRef(null);
   const stateRef = useRef(null);
@@ -127,6 +131,7 @@ export function AppStateProvider({ children }) {
     try { const savedIdentifier = localStorage.getItem('nad_guest_identifier'); if (savedIdentifier) { patch({ currentGuestIdentifier: savedIdentifier }); checkSavedProject(savedIdentifier); } } catch (e) {}
     try { const savedImages = JSON.parse(localStorage.getItem('nad_image_overrides') || '{}'); if (savedImages && typeof savedImages === 'object') patch({ imageOverrides: savedImages }); } catch (e) {}
     try { const savedTheme = localStorage.getItem('nad_theme'); if (savedTheme === 'dark' || savedTheme === 'light') patch({ theme: savedTheme }); } catch (e) {}
+    try { const savedFavorites = JSON.parse(localStorage.getItem('nad_favorites') || 'null'); if (savedFavorites && typeof savedFavorites === 'object') patch({ favorites: { materials: savedFavorites.materials || {}, furniture: savedFavorites.furniture || {} } }); } catch (e) {}
     if (!isSupabaseConfigured) {
       try { const savedRegs = JSON.parse(localStorage.getItem('nad_registrations') || '[]'); if (Array.isArray(savedRegs)) patch({ adminRegistrations: savedRegs }); } catch (e) {}
       try { const savedSuppliers = JSON.parse(localStorage.getItem('nad_suppliers') || 'null'); if (Array.isArray(savedSuppliers) && savedSuppliers.length) patch({ adminSuppliers: savedSuppliers }); } catch (e) {}
@@ -134,6 +139,17 @@ export function AppStateProvider({ children }) {
     loadSiteData(false); // pricing overrides are site-wide — load for everyone
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Generation history is per-identifier (falls back to a shared "anon" bucket
+  // for logged-out browsing) so a returning guest sees their own past renders.
+  useEffect(() => {
+    try {
+      const key = 'nad_gen_history::' + (state.currentGuestIdentifier || 'anon');
+      const saved = JSON.parse(localStorage.getItem(key) || '[]');
+      if (Array.isArray(saved)) patch({ generationHistory: saved });
+    } catch (e) {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.currentGuestIdentifier]);
 
   // Persist the guest's journey (selections + progress) so they can resume
   // from any device. Runs shortly after state settles; upload images are
@@ -703,6 +719,20 @@ export function AppStateProvider({ children }) {
   const setImageSize = useCallback((key) => patch({ generationImageSize: key }), [patch]);
   const toggleAllowFullRedesign = useCallback(() => patch((s) => ({ allowFullRedesign: !s.allowFullRedesign })), [patch]);
 
+  // Keeps the last few successful renders (this browser only) so a client can
+  // revisit an earlier version without regenerating.
+  const pushGenerationHistory = useCallback((entry) => {
+    setState((s) => {
+      const key = 'nad_gen_history::' + (s.currentGuestIdentifier || 'anon');
+      const next = [{ ...entry, createdAt: new Date().toISOString() }, ...s.generationHistory].slice(0, 6);
+      try { localStorage.setItem(key, JSON.stringify(next)); } catch (e) {
+        try { localStorage.setItem(key, JSON.stringify(next.slice(0, 2))); } catch (e2) {}
+      }
+      return { generationHistory: next };
+    });
+  }, []);
+  const viewHistoryEntry = useCallback((entry) => patch({ generatedImageUrl: entry.image, generationStatus: 'done', sliderPos: 50 }), [patch]);
+
   const generateDesign = useCallback(async () => {
     if (!state.role) { goToLogin('generate'); return; }
     if (state.generationStatus === 'generating') return;
@@ -734,12 +764,142 @@ export function AppStateProvider({ children }) {
     if (result.success) {
       patch((s) => ({ generationStatus: 'done', generationVersion: (s.generationVersion || 0) + 1, generatedImageUrl: result.image, generationError: null }));
       saveGuestProject();
+      pushGenerationHistory({ image: result.image, prompt, mood: state.generationMood, quality: state.generationQuality });
     } else {
       patch({ generationStatus: 'error', generationError: result.error });
     }
-  }, [state, goToLogin, getAutoPrompt, patch, saveGuestProject]);
+  }, [state, goToLogin, getAutoPrompt, patch, saveGuestProject, pushGenerationHistory]);
   const regenerate = useCallback(() => generateDesign(), [generateDesign]);
   const resetGeneration = useCallback(() => patch({ generationStatus: 'idle', generatedImageUrl: null, generationError: null, promptDraft: null }), [patch]);
+
+  // Favorites — heart any material swatch or furniture piece; persists locally
+  // and surfaces as a quick-reference list on the Summary step.
+  const toggleFavoriteMaterial = useCallback((catKey, item) => {
+    const key = catKey + '::' + item[0];
+    setState((s) => {
+      const materials = { ...s.favorites.materials };
+      if (materials[key]) delete materials[key]; else materials[key] = { catKey, en: item[0], ar: item[1] };
+      const next = { ...s.favorites, materials };
+      try { localStorage.setItem('nad_favorites', JSON.stringify(next)); } catch (e) {}
+      return { favorites: next };
+    });
+  }, []);
+  const toggleFavoriteFurniture = useCallback((item) => {
+    const key = String(item.id);
+    setState((s) => {
+      const furniture = { ...s.favorites.furniture };
+      if (furniture[key]) delete furniture[key]; else furniture[key] = { id: item.id, name: item.name, code: item.code };
+      const next = { ...s.favorites, furniture };
+      try { localStorage.setItem('nad_favorites', JSON.stringify(next)); } catch (e) {}
+      return { favorites: next };
+    });
+  }, []);
+
+  // Shareable read-only summary link. With Supabase configured, the compact
+  // selections + a downscaled preview image are stashed server-side under a
+  // random "share-" identifier (reusing the guest-projects table) and the link
+  // just carries the token. Without Supabase, everything is packed into the
+  // URL hash instead (no image — keeps the link a reasonable length).
+  const buildShareLink = useCallback(async () => {
+    patch({ shareStatus: 'creating', shareUrl: null });
+    const s = stateRef.current;
+    const sel = s.selections;
+    const shareData = {
+      lang: s.lang,
+      customTypeText: s.customTypeText,
+      selections: {
+        projectType: sel.projectType, designLevel: sel.designLevel, stylePrimary: sel.stylePrimary, styleSecondary: sel.styleSecondary,
+        materials: sel.materials, furniture: (sel.furniture || []).map((f) => ({ name: f.name, code: f.code, price: f.price })),
+        projectInfo: sel.projectInfo,
+      },
+      cost: computeCost(sel, s.priceOverrides),
+      createdAt: new Date().toISOString(),
+    };
+    const token = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    const origin = window.location.origin;
+    if (isSupabaseConfigured) {
+      let imageDataUrl = null;
+      if (s.generatedImageUrl) { try { imageDataUrl = await urlToResizedJpegDataUrl(s.generatedImageUrl, 900, 0.72); } catch (e) {} }
+      try {
+        await fetch('/api/guest-projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifier: 'share-' + token, data: { ...shareData, generatedImageUrl: imageDataUrl }, maxStepIndex: 7 }) });
+        patch({ shareStatus: 'ready', shareUrl: origin + '/s/' + token });
+      } catch (e) {
+        patch({ shareStatus: 'error', shareUrl: null });
+      }
+      return;
+    }
+    try {
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(shareData))));
+      patch({ shareStatus: 'ready', shareUrl: origin + '/s/local#' + encoded });
+    } catch (e) {
+      patch({ shareStatus: 'error', shareUrl: null });
+    }
+  }, [patch]);
+
+  // Side-by-side style comparison — runs two independent generations (primary
+  // style alone vs. secondary style alone) so a client can see both looks at once.
+  const toggleCompareStyles = useCallback(() => patch((s) => ({ compareStyles: !s.compareStyles })), [patch]);
+  const generateCompareDesigns = useCallback(async () => {
+    const s = stateRef.current;
+    if (!s.role) { goToLogin('generate'); return; }
+    if (!s.selections.stylePrimary || !s.selections.styleSecondary) return;
+    patch({ compareStatus: 'generating', compareResults: null });
+    const uploadedImage = (s.selections.uploads || []).find((u) => u.isImage && u.dataUrl);
+    let roomImageDataUrl;
+    if (uploadedImage) { try { roomImageDataUrl = await urlToResizedJpegDataUrl(uploadedImage.dataUrl, 1600, 0.85); } catch (e) { roomImageDataUrl = uploadedImage.dataUrl; } }
+    const referenceImages = [];
+    for (const ref of getReferenceFurniture(s)) {
+      try { referenceImages.push({ dataUrl: await urlToResizedJpegDataUrl(ref.src, 768), name: ref.name }); } catch (e) {}
+    }
+    const variants = [
+      { label: s.selections.stylePrimary[s.lang], selOverride: { stylePrimary: s.selections.stylePrimary, styleSecondary: null } },
+      { label: s.selections.styleSecondary[s.lang], selOverride: { stylePrimary: s.selections.styleSecondary, styleSecondary: null } },
+    ];
+    const results = await Promise.all(variants.map(async (v) => {
+      const prompt = buildStructuredPrompt({
+        selections: { ...s.selections, ...v.selOverride }, lang: s.lang, customTypeText: s.customTypeText, mood: s.generationMood,
+        hasUploadedImage: !!uploadedImage, allowFullRedesign: s.allowFullRedesign, referenceItems: getReferenceFurniture(s).map((r) => r.name),
+      });
+      const result = await requestNanoBananaDesign({
+        prompt, imageDataUrl: roomImageDataUrl, referenceImages,
+        aspectRatio: s.generationAspectRatio || AI_GENERATION_CONFIG.defaultAspectRatio, imageSize: s.generationImageSize || AI_GENERATION_CONFIG.defaultImageSize,
+        projectId: s.selections.projectType ? s.selections.projectType.key : null, guestIdentifier: s.role === 'guest' ? s.currentGuestIdentifier : null,
+      });
+      return { label: v.label, ok: result.success, image: result.image, error: result.error };
+    }));
+    patch({ compareStatus: 'done', compareResults: results });
+  }, [patch, goToLogin]);
+
+  // Printable cost-breakdown PDF — opens a plain print-ready document in a new
+  // tab and triggers the browser's print dialog (Save as PDF).
+  const printCostBreakdown = useCallback(() => {
+    const s = stateRef.current;
+    const cost = computeCost(s.selections, s.priceOverrides);
+    const lang = s.lang; const T = STRINGS[lang];
+    const rows = [
+      [T.summary.perSqm, fmtSar(cost.perSqm, lang)],
+      [T.summary.materialsCost, fmtSar(cost.materialsAddon, lang)],
+      [T.summary.furnitureCost, fmtSar(cost.furnitureCost, lang)],
+      [T.summary.lightingCost, fmtSar(cost.lightingCost, lang)],
+      [T.summary.installationCost, fmtSar(cost.installation, lang)],
+      [T.summary.designFee, fmtSar(cost.designFee, lang)],
+    ];
+    const win = window.open('', '_blank');
+    if (!win) return;
+    const dir = lang === 'ar' ? 'rtl' : 'ltr';
+    win.document.write('<!doctype html><html dir="' + dir + '"><head><meta charset="utf-8"><title>NAD Design — ' + T.summary.costBreakdown + '</title>'
+      + '<style>body{font-family:Georgia,serif;padding:48px;color:#241a0e;}h1{font-size:22px;margin:0 0 4px;}.sub{font-size:12px;color:#6b5c46;margin-bottom:28px;}'
+      + 'table{width:100%;border-collapse:collapse;font-size:14px;}td{padding:10px 0;border-bottom:1px solid #e4d9c4;}'
+      + 'td:last-child{text-align:' + (lang === 'ar' ? 'left' : 'right') + ';font-weight:600;}'
+      + 'tr.total td{font-size:17px;font-weight:700;border-top:2px solid #241a0e;border-bottom:none;padding-top:16px;}'
+      + '.disc{font-size:11px;color:#8a7a5f;margin-top:24px;line-height:1.6;}</style></head><body>'
+      + '<h1>NAD Design</h1><div class="sub">' + T.summary.costBreakdown + ' — ' + new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US') + '</div>'
+      + '<table>' + rows.map((r) => '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>').join('') + '<tr class="total"><td>' + T.summary.total + '</td><td>' + fmtSar(cost.total, lang) + '</td></tr></table>'
+      + '<div class="disc">' + T.summary.disclaimer + '</div></body></html>');
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); }, 300);
+  }, []);
 
   const downloadPlaceholder = useCallback(() => {
     const canvas = document.createElement('canvas'); canvas.width = 1200; canvas.height = 800;
@@ -978,6 +1138,8 @@ export function AppStateProvider({ children }) {
     setAspectRatio, setImageSize, toggleAllowFullRedesign,
     generateDesign, regenerate, resetGeneration, downloadPlaceholder, downloadGeneratedImage,
     saveProject, requestConsult, buildWhatsAppLink, setSliderPos,
+    toggleFavoriteMaterial, toggleFavoriteFurniture, viewHistoryEntry,
+    buildShareLink, toggleCompareStyles, generateCompareDesigns, printCostBreakdown,
     loadProjectTypes, openProjectTypeEditor, closeProjectTypeEditor, saveProjectTypeEdit: saveProjectTypeEditFn, quickSaveProjectTypeImage,
     loadFurnitureItems, openFurnitureEditor, openNewFurnitureItem, closeFurnitureEditor, saveFurnitureItemEdit, deleteFurnitureItemFn, quickSaveFurnitureImage, seedFurnitureCatalog,
     computeCost: () => computeCost(state.selections, state.priceOverrides),

@@ -8,12 +8,29 @@ export default function FunnelChart({ funnel, steps, lang }) {
   const sub = lang === 'ar' ? 'عدد الرحلات التي وصلت إلى كل خطوة — وأين يتوقف الزوار' : 'How many journeys reached each step — and where visitors drop off';
   const emptyMsg = lang === 'ar' ? 'لا توجد بيانات رحلات بعد — تظهر البيانات عندما يبدأ الزوار رحلات التصميم.' : 'No journey data yet — data appears once visitors start design journeys.';
   const max = Math.max(1, ...(funnel || [0]));
+  let worstIdx = -1, worstPct = 0;
+  (funnel || []).forEach((count, i) => {
+    if (i === 0) return;
+    const prev = funnel[i - 1];
+    if (prev > 0) {
+      const pct = Math.round(((prev - count) / prev) * 100);
+      if (pct > worstPct) { worstPct = pct; worstIdx = i; }
+    }
+  });
+  const dropAlert = worstIdx > 0 && worstPct >= 20
+    ? (lang === 'ar'
+      ? '\u0623\u0643\u0628\u0631 \u062a\u0633\u0631\u0628: ' + worstPct + '% \u064a\u062a\u0648\u0642\u0641\u0648\u0646 \u0628\u064a\u0646 \u00ab' + (steps[worstIdx - 1] || '') + '\u00bb \u0648\u00ab' + (steps[worstIdx] || '') + '\u00bb.'
+      : 'Biggest drop-off: ' + worstPct + '% leave between \u201c' + (steps[worstIdx - 1] || '') + '\u201d and \u201c' + (steps[worstIdx] || '') + '\u201d.')
+    : null;
 
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 22, marginTop: 20 }}>
       <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{title}</div>
       <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2, marginBottom: 18 }}>{sub}</div>
       {!hasData && <div style={{ fontSize: 13, color: 'var(--text-2)', padding: '18px 0' }}>{emptyMsg}</div>}
+      {hasData && dropAlert && (
+        <div role="alert" style={{ fontSize: 12.5, color: 'oklch(40% 0.12 30)', background: 'oklch(93% 0.04 30)', border: '1px solid oklch(78% 0.07 30)', borderRadius: 10, padding: '10px 14px', marginBottom: 14 }}>{dropAlert}</div>
+      )}
       {hasData && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {funnel.map((count, i) => {

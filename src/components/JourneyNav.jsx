@@ -20,15 +20,15 @@ export default function JourneyNav({ backTo, onNext, nextDisabled, nextLabel }) 
   const nextHover = enabled ? 'transform:translateY(-2px);box-shadow:0 10px 22px -8px oklch(20% 0.02 50 / 0.4);filter:brightness(1.08);' : '';
 
   const bar = (
-    <div className="nad-journey-nav">
+    <div className="nad-journey-nav">{/* phone: compact single row via .nad-jnav-* rules */}
       {backTo ? (
-        <Hoverable as="button" type="button" style="min-height:48px;font-size:14px;font-weight:600;color:var(--text);background:transparent;border:1px solid var(--border);padding:12px 24px;border-radius:100px;cursor:pointer;white-space:nowrap;transition:transform .18s ease,background .18s ease;" hoverStyle="transform:translateY(-2px);background:var(--border);" onClick={() => goToStep(backTo)}>{T.common.back}</Hoverable>
+        <Hoverable as="button" type="button" className="nad-jnav-back" style="min-height:48px;font-size:14px;font-weight:600;color:var(--text);background:transparent;border:1px solid var(--border);padding:12px 24px;border-radius:100px;cursor:pointer;white-space:nowrap;transition:transform .18s ease,background .18s ease;" hoverStyle="transform:translateY(-2px);background:var(--border);" onClick={() => goToStep(backTo)}>{T.common.back}</Hoverable>
       ) : <span />}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {cost && <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 100, padding: '8px 14px', whiteSpace: 'nowrap' }}>≈ {fmtSar(cost.total, lang)}</span>}
-        {showSaved && <span style={{ fontSize: 11.5, fontWeight: 600, color: 'oklch(45% 0.08 145)', whiteSpace: 'nowrap' }} role="status">✓ {T.common.saved}</span>}
+        {cost && <span className="nad-jnav-price" style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 100, padding: '8px 14px', whiteSpace: 'nowrap' }}>≈ {fmtSar(cost.total, lang)}</span>}
+        {showSaved && <span style={{ fontSize: 11.5, fontWeight: 600, color: 'oklch(45% 0.08 145)', whiteSpace: 'nowrap' }} role="status">✓<span className="nad-jnav-saved-label"> {T.common.saved}</span></span>}
       </div>
-      <Hoverable as="button" type="button" disabled={!enabled} style={nextStyle} hoverStyle={nextHover} onClick={onNext}>{nextLabel || T.common.next}</Hoverable>
+      <Hoverable as="button" type="button" className="nad-jnav-next" disabled={!enabled} style={nextStyle} hoverStyle={nextHover} onClick={onNext}>{nextLabel || T.common.next}</Hoverable>
     </div>
   );
 

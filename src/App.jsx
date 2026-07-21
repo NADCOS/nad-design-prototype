@@ -17,6 +17,7 @@ import FurniturePage from './pages/FurniturePage.jsx';
 import UploadPage from './pages/UploadPage.jsx';
 import SummaryPage from './pages/SummaryPage.jsx';
 import GeneratePage from './pages/GeneratePage.jsx';
+import SharePage from './pages/SharePage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 
 function Shell() {
@@ -41,6 +42,7 @@ function Shell() {
           <Route key={step} path={'/design/' + step} element={<DesignJourneyLayout step={step}>{stepPage(step, headFont)}</DesignJourneyLayout>} />
         ))}
         <Route path="/design" element={<Navigate to="/design/type" replace />} />
+        <Route path="/s/:token" element={<SharePage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <WhatsAppButton />

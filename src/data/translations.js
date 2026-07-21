@@ -75,6 +75,14 @@ export const STRINGS = {
       formError: 'Please enter your WhatsApp number.',
       send: 'Continue on WhatsApp',
     },
+    extras: {
+      historyTitle: 'Your generation history', historyEmpty: 'Past generations will appear here after you generate a design.', historyView: 'View', historyNote: 'Recent versions from this browser',
+      shareBtn: 'Share summary link', shareCreating: 'Creating link…', shareCopy: 'Copy link', shareCopied: 'Link copied!', shareDesc: 'Anyone with this link can view a read-only summary of this design — no login needed.', shareTitle: 'Share this design',
+      favoritesTitle: 'Favorites', favoritesEmpty: 'No favorites yet — tap the heart on any material or furniture piece to save it here.', favoriteAdd: 'Add to favorites', favoriteRemove: 'Remove from favorites',
+      compareToggle: 'Compare 2 styles side-by-side', compareBtn: 'Generate Both Styles', compareGenerating: 'Generating both styles…', compareNeedsSecondary: 'Pick a secondary style on the Style step to compare two looks.',
+      pdfBtn: 'Download cost PDF',
+      readOnlyBanner: 'Read-only shared summary — from NAD Design', startOwn: 'Start your own design', notFound: 'This shared link is no longer available.',
+    },
   },
   ar: {
     brand: 'ناد ديزاين',
@@ -150,6 +158,14 @@ export const STRINGS = {
       messageLabel: 'رسالتك (اختياري)', messagePlaceholder: 'ماذا تبحث عنه؟',
       formError: 'الرجاء إدخال رقم واتساب.',
       send: 'المتابعة على واتساب',
+    },
+    extras: {
+      historyTitle: 'سجل التوليدات', historyEmpty: 'ستظهر هنا التصاميم التي ولّدتها سابقاً.', historyView: 'عرض', historyNote: 'أحدث النسخ من هذا المتصفح',
+      shareBtn: 'مشاركة رابط الملخص', shareCreating: 'جارٍ إنشاء الرابط…', shareCopy: 'نسخ الرابط', shareCopied: 'تم نسخ الرابط!', shareDesc: 'يمكن لأي شخص لديه هذا الرابط عرض ملخص للقراءة فقط لهذا التصميم — دون تسجيل دخول.', shareTitle: 'مشاركة هذا التصميم',
+      favoritesTitle: 'المفضلة', favoritesEmpty: 'لا توجد مفضلات بعد — اضغط على أيقونة القلب على أي خامة أو قطعة أثاث لحفظها هنا.', favoriteAdd: 'إضافة إلى المفضلة', favoriteRemove: 'إزالة من المفضلة',
+      compareToggle: 'قارن بين نمطين جنباً إلى جنب', compareBtn: 'ولّد كلا النمطين', compareGenerating: 'جارٍ توليد كلا النمطين…', compareNeedsSecondary: 'اختر نمطاً ثانوياً في خطوة النمط لمقارنة تصميمين.',
+      pdfBtn: 'تحميل PDF للتكلفة',
+      readOnlyBanner: 'ملخص مشترك للقراءة فقط — من ناد ديزاين', startOwn: 'ابدأ تصميمك الخاص', notFound: 'هذا الرابط المشترك لم يعد متاحاً.',
     },
   },
 };

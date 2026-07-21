@@ -25,6 +25,9 @@ export default function DesignSummary() {
   const summaryUploadsText = s.uploads.length + (lang === 'ar' ? ' ملف' : ' files');
   const warningsList = computeWarnings();
   const hasWarnings = warningsList.length > 0;
+  const favMaterials = Object.values(state.favorites.materials || {});
+  const favFurniture = Object.values(state.favorites.furniture || {});
+  const hasFavorites = favMaterials.length > 0 || favFurniture.length > 0;
 
   const Row = ({ label, value, step }) => (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '18px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -47,6 +50,15 @@ export default function DesignSummary() {
         <div style={{ fontSize: 13.5, color: 'var(--text)', lineHeight: 1.8 }}>{summaryFurnitureText}</div>
       </div>
       <Row label={T.summary.uploads} value={summaryUploadsText} step="upload" />
+      {hasFavorites && (
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '18px 20px' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-2)', marginBottom: 8 }}>{T.extras.favoritesTitle}</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {favMaterials.map((f, i) => <span key={'m' + i} style={{ fontSize: 12.5, padding: '6px 12px', borderRadius: 100, background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}>{f[lang]}</span>)}
+            {favFurniture.map((f, i) => <span key={'f' + i} style={{ fontSize: 12.5, padding: '6px 12px', borderRadius: 100, background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text)' }}>{f.name}</span>)}
+          </div>
+        </div>
+      )}
       {hasWarnings && (
         <div style={{ background: 'oklch(93% 0.03 65)', border: '1px solid oklch(75% 0.06 60)', borderRadius: 14, padding: '16px 20px' }} role="alert">
           <div style={{ fontSize: 12, fontWeight: 700, color: 'oklch(35% 0.06 55)', marginBottom: 8 }}>{T.materials.warning}</div>

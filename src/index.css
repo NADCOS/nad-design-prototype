@@ -56,11 +56,14 @@ body:has(.nad-journey-nav) .nad-toast { bottom: 100px !important; }
 }
 @keyframes nad-sheet-up { from { transform: translateY(48px); } to { transform: translateY(0); } }
 @media (max-width: 700px) {
-  /* On phones the bar's contents (Back / price / Continue) can wrap to two
-     rows, making it taller than the default spacer — reserve enough room so
-     it never covers the content's last buttons. */
-  .nad-journey-nav-spacer { height: 160px; }
-  .nad-journey-nav { gap: 8px; padding-top: 8px; }
+  /* Phone: keep the journey bar a compact SINGLE row (no wrapping) so it
+     stays short and never covers the content's last buttons. */
+  .nad-journey-nav { flex-wrap: nowrap; gap: 8px; }
+  .nad-journey-nav-spacer { height: 104px; }
+  .nad-jnav-back { padding: 12px 16px !important; font-size: 13px !important; flex-shrink: 0; }
+  .nad-jnav-next { padding: 13px 20px !important; font-size: 14px !important; flex-shrink: 0; }
+  .nad-jnav-price { font-size: 11.5px !important; padding: 6px 10px !important; }
+  .nad-jnav-saved-label { display: none; }
   .nad-nav-desktop { display: none !important; }
   .nad-nav-mobile { display: flex !important; }
   .nad-progress-full { display: none !important; }

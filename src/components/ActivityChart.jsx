@@ -18,7 +18,8 @@ function bucketRegistrations(registrations, periods, mode) {
 // buckets, toggled between the last 12 months and the last 5 years.
 export default function ActivityChart({ monthly, yearly, registrations, loading }) {
   const [mode, setMode] = useState('month');
-  const periods = mode === 'month' ? monthly : yearly;
+  const [monthRange, setMonthRange] = useState(12);
+  const periods = mode === 'month' ? monthly.slice(-monthRange) : yearly;
   const genCounts = periods.map((p) => p.count);
   const regCounts = useMemo(() => bucketRegistrations(registrations, periods, mode), [registrations, periods, mode]);
 
@@ -37,7 +38,10 @@ export default function ActivityChart({ monthly, yearly, registrations, loading 
           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>Site Activity</div>
           <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>AI designs generated and visitor registrations over time</div>
         </div>
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {mode === 'month' && [3, 6, 12].map((n) => (
+            <button key={n} type="button" onClick={() => setMonthRange(n)} style={{ fontSize: 11.5, fontWeight: 600, padding: '7px 12px', borderRadius: 100, cursor: 'pointer', background: monthRange === n ? 'var(--border)' : 'transparent', color: 'var(--text-2)', border: '1px solid var(--border)' }}>{'Last ' + n + 'mo'}</button>
+          ))}
           {['month', 'year'].map((m) => (
             <button key={m} type="button" onClick={() => setMode(m)} style={{ fontSize: 12, fontWeight: 600, padding: '7px 14px', borderRadius: 100, cursor: 'pointer', background: mode === m ? 'var(--btn-bg)' : 'transparent', color: mode === m ? 'var(--btn-text)' : 'var(--text-2)', border: '1px solid ' + (mode === m ? 'var(--btn-bg)' : 'var(--border)') }}>{m === 'month' ? 'Monthly' : 'Yearly'}</button>
           ))}

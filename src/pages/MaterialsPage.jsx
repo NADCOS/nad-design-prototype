@@ -8,7 +8,7 @@ import JourneyNav from '../components/JourneyNav.jsx';
 import { sx } from '../utils/sx.js';
 
 export default function MaterialsPage() {
-  const { state, setMaterialTab, chooseMaterial, openMaterialDetail, removeFromBoard, nextFromMaterials, handleAdminImageChange } = useAppState();
+  const { state, setMaterialTab, chooseMaterial, openMaterialDetail, removeFromBoard, nextFromMaterials, handleAdminImageChange, toggleFavoriteMaterial } = useAppState();
   const [tab, setTab] = useState(state.materialTab || 'flooring');
   const [hoverItem, setHoverItem] = useState(null);
   const lang = state.lang;
@@ -50,6 +50,9 @@ export default function MaterialsPage() {
                 editLabel={T.common.edit} chosen={chosen}
                 onHover={() => setHoverItem({ en: item[0], ar: item[1] })}
                 onSelect={() => { chooseMaterial(activeCat.key, item); openMaterialDetail(activeCat.key, item); }}
+                favorited={!!state.favorites.materials[activeCat.key + '::' + item[0]]}
+                onToggleFavorite={() => toggleFavoriteMaterial(activeCat.key, item)}
+                favoriteLabel={T.extras.favoriteAdd}
               />
             );
           })}

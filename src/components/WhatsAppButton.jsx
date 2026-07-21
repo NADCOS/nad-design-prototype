@@ -16,6 +16,18 @@ export default function WhatsAppButton() {
   const [message, setMessage] = React.useState('');
   const [error, setError] = React.useState('');
 
+  // Prefill the message with the client's current selections (project type,
+  // level, style) instead of a blank field — so the human on the other end
+  // has context immediately, without the client retyping it.
+  const sel = state.selections;
+  const contextParts = [sel.projectType ? sel.projectType[lang] : null, sel.designLevel ? sel.designLevel[lang] : null, sel.stylePrimary ? sel.stylePrimary[lang] : null].filter(Boolean);
+  const contextLine = contextParts.length ? (lang === 'ar' ? '\u0628\u062e\u0635\u0648\u0635 \u0645\u0634\u0631\u0648\u0639: ' + contextParts.join(' \u00b7 ') + ' \u2014 ' : 'Regarding my project: ' + contextParts.join(' \u00b7 ') + ' \u2014 ') : '';
+  const toggleOpen = () => {
+    const opening = !open;
+    if (opening && !message) setMessage(contextLine);
+    setOpen(opening);
+  };
+
   const submit = (e) => {
     e.preventDefault();
     const trimmedNumber = number.trim();
@@ -68,7 +80,7 @@ export default function WhatsAppButton() {
       )}
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggleOpen}
         aria-label={open ? T.ariaClose : T.ariaOpen}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}

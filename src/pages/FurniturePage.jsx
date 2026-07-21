@@ -13,7 +13,7 @@ function findFinish(opts, val) { return opts.find((o) => o[0] === val) || null; 
 export default function FurniturePage({ headFont }) {
   const {
     state, setFurnitureTab, openFurnitureDetail, removeFurnitureItem, nextFromFurniture, handleAdminImageChange,
-    loadFurnitureItems, openFurnitureEditor, openNewFurnitureItem, quickSaveFurnitureImage, seedFurnitureCatalog,
+    loadFurnitureItems, openFurnitureEditor, openNewFurnitureItem, quickSaveFurnitureImage, seedFurnitureCatalog, toggleFavoriteFurniture,
   } = useAppState();
   const [tab, setTab] = useState(state.furnitureTab || 'sofas');
   const [brokenImageUrls, setBrokenImageUrls] = useState({});
@@ -104,6 +104,9 @@ export default function FurniturePage({ headFont }) {
                   onEditClick={item.remoteRow ? () => openFurnitureEditor(item.remoteRow) : undefined}
                   onQuickImageUpload={item.remoteRow ? (file) => quickSaveFurnitureImage(item.remoteRow, file) : undefined}
                   saving={state.furnitureSaving}
+                  favorited={!!state.favorites.furniture[String(item.id)]}
+                  onToggleFavorite={() => toggleFavoriteFurniture(item)}
+                  favoriteLabel={T.extras.favoriteAdd}
                 />
               );
             })}
