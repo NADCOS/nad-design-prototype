@@ -135,14 +135,14 @@ export default function ActivityChart({ monthly, yearly, registrations, loading 
 
             <path d={areaPath(regPts)} fill="url(#regFill)" />
             <path d={areaPath(genPts)} fill="url(#genFill)" />
-            <path d={smoothPath(regPts)} fill="none" stroke={REG_COLOR} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-            <path d={smoothPath(genPts)} fill="none" stroke={GEN_COLOR} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+            <path d={smoothPath(regPts)} fill="none" stroke={REG_COLOR} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+            <path d={smoothPath(genPts)} fill="none" stroke={GEN_COLOR} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
 
             {/* Emphasize the latest data point */}
             {n > 0 && [{ p: regPts[lastIdx], c: REG_COLOR }, { p: genPts[lastIdx], c: GEN_COLOR }].map((o, k) => (
               <g key={'last' + k}>
                 <circle cx={o.p.x} cy={o.p.y} r="6" fill={o.c} opacity="0.16" />
-                <circle cx={o.p.x} cy={o.p.y} r="3.5" fill="var(--surface)" stroke={o.c} strokeWidth="2.5" />
+                <circle cx={o.p.x} cy={o.p.y} r="3.5" fill="var(--surface)" stroke={o.c} strokeWidth="1.75" />
               </g>
             ))}
 

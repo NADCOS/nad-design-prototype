@@ -47,6 +47,10 @@ body:has(.nad-journey-nav) .nad-whatsapp-fab { bottom: 100px !important; }
 body:has(.nad-journey-nav) .nad-toast { bottom: 100px !important; }
 @keyframes nad-letter-in { from { opacity: 0; transform: translateY(16px); filter: blur(6px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
 @keyframes nad-grow-line { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes nad-pop { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes nad-mood-in { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.nad-pop { animation: nad-pop .3s ease; }
+.nad-mood-pop { animation: nad-mood-in .26s ease; transform-origin: bottom left; }
 .nad-progress-compact { display: none; }
 .nad-sheet-handle { display: none; width: 44px; height: 4px; border-radius: 100px; background: oklch(75% 0.02 70); margin: 0 auto 14px; }
 .nad-journey-rail { display: none; }
