@@ -72,6 +72,7 @@ export function buildStructuredPrompt({ selections, lang, customTypeText, mood, 
   const pi = selections.projectInfo || {};
   if (pi.location) lines.push(L('Location', 'الموقع') + ': ' + pi.location);
   if (pi.area) lines.push(L('Room area', 'مساحة الغرفة') + ': ' + pi.area + ' m\u00b2');
+  if (pi.roomSize) lines.push(L('Room dimensions (L \u00d7 W)', 'أبعاد الغرفة (طول \u00d7 عرض)') + ': ' + pi.roomSize + ' m');
   if (pi.ceiling) lines.push(L('Ceiling height', 'ارتفاع السقف') + ': ' + pi.ceiling + ' m');
   if (pi.colors) lines.push(L('Preferred colours', 'الألوان المفضلة') + ': ' + pi.colors);
   if (pi.budget) lines.push(L('Budget', 'الميزانية') + ': ' + pi.budget);

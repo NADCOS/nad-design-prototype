@@ -16,6 +16,7 @@ export default function UploadPage() {
   const fields = [
     { key: 'location', label: T.upload.location, type: 'text' },
     { key: 'area', label: T.upload.area, type: 'number' },
+    { key: 'roomSize', label: T.upload.roomSize, type: 'text', ph: T.upload.roomSizePh },
     { key: 'ceiling', label: T.upload.ceiling, type: 'text' },
     { key: 'colors', label: T.upload.colors, type: 'text' },
     { key: 'functions', label: T.upload.functions, type: 'text' },
@@ -49,7 +50,7 @@ export default function UploadPage() {
         {fields.map((f) => (
           <div key={f.key}>
             <label htmlFor={'nad-pi-' + f.key} style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text)', display: 'block', marginBottom: 6 }}>{f.label}</label>
-            <input id={'nad-pi-' + f.key} type={f.type} value={pi[f.key]} onChange={setProjectInfoField(f.key)} style={sx(inputStyle)} />
+            <input id={'nad-pi-' + f.key} type={f.type} placeholder={f.ph || ''} value={pi[f.key]} onChange={setProjectInfoField(f.key)} style={sx(inputStyle)} />
           </div>
         ))}
         <div style={{ gridColumn: 'span 2' }}>
