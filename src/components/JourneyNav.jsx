@@ -102,6 +102,13 @@ export default function JourneyNav({ backTo, onNext, nextDisabled, nextLabel }) 
             <div style={{ height: '100%', borderRadius: 100, background: 'var(--accent, oklch(58% 0.09 65))', width: progressPct + '%', transition: 'width .4s cubic-bezier(.4,0,.2,1)' }} />
           </div>
 
+          {cost && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14, paddingBottom: 12, borderBottom: '1px solid var(--border)' }}>
+              <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-2)' }}>{lang === 'ar' ? 'التقدير' : 'Estimated total'}</span>
+              <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--text)' }}>≈ {fmtSar(cost.total, lang)}</span>
+            </div>
+          )}
+
           {hasStyle && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: tiles.length ? 8 : 12 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sel.stylePrimary[lang]}{sel.styleSecondary ? ' + ' + sel.styleSecondary[lang] : ''}</div>
