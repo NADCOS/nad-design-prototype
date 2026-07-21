@@ -16,7 +16,6 @@ export default function UploadPage() {
   const fields = [
     { key: 'location', label: T.upload.location, type: 'text' },
     { key: 'area', label: T.upload.area, type: 'number' },
-    { key: 'rooms', label: T.upload.rooms, type: 'text' },
     { key: 'ceiling', label: T.upload.ceiling, type: 'text' },
     { key: 'colors', label: T.upload.colors, type: 'text' },
     { key: 'functions', label: T.upload.functions, type: 'text' },

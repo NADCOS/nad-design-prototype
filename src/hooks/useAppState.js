@@ -49,7 +49,7 @@ const initialSelections = {
   board: [],
   furniture: [],
   uploads: [],
-  projectInfo: { location: '', area: '150', rooms: '', ceiling: '', colors: '', functions: '', budget: '', special: '' },
+  projectInfo: { location: '', area: '150', ceiling: '', colors: '', functions: '', budget: '', special: '' },
 };
 
 const AppStateContext = createContext(null);
