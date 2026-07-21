@@ -16,9 +16,8 @@ export default function JourneyNav({ backTo, onNext, nextDisabled, nextLabel }) 
   const enabled = !nextDisabled;
   const cost = state.selections.designLevel ? computeCost() : null;
   const showSaved = state.role === 'guest' && !!state.lastSavedAt;
-  const nextStyle = 'min-height:48px;display:inline-flex;align-items:center;gap:9px;font-size:14.5px;font-weight:650;letter-spacing:.01em;color:' + (enabled ? 'var(--btn-text)' : 'var(--muted)') + ';background:' + (enabled ? 'linear-gradient(180deg, color-mix(in oklch, var(--btn-bg) 88%, white), var(--btn-bg))' : 'var(--border)') + ';border:none;padding:14px 30px;border-radius:100px;cursor:' + (enabled ? 'pointer' : 'not-allowed') + ';white-space:nowrap;box-shadow:' + (enabled ? 'inset 0 1px 0 oklch(100% 0 0 / 0.18), 0 6px 16px -8px oklch(20% 0.02 50 / 0.45)' : 'none') + ';transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;';
-  const nextHover = enabled ? 'transform:translateY(-2px);box-shadow:inset 0 1px 0 oklch(100% 0 0 / 0.22), 0 12px 26px -8px oklch(20% 0.02 50 / 0.5);filter:brightness(1.06);' : '';
-  const arrow = lang === 'ar' ? '←' : '→';
+  const nextStyle = 'min-height:48px;font-size:14.5px;font-weight:600;color:var(--btn-text);background:' + (enabled ? 'var(--btn-bg)' : 'var(--border)') + ';border:none;padding:13px 30px;border-radius:100px;cursor:' + (enabled ? 'pointer' : 'not-allowed') + ';white-space:nowrap;transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;';
+  const nextHover = enabled ? 'transform:translateY(-2px);box-shadow:0 10px 22px -8px oklch(20% 0.02 50 / 0.4);filter:brightness(1.08);' : '';
 
   const bar = (
     <div className="nad-journey-nav">{/* phone: compact single row via .nad-jnav-* rules */}
@@ -29,7 +28,7 @@ export default function JourneyNav({ backTo, onNext, nextDisabled, nextLabel }) 
         {cost && <span className="nad-jnav-price" style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 100, padding: '8px 14px', whiteSpace: 'nowrap' }}>≈ {fmtSar(cost.total, lang)}</span>}
         {showSaved && <span style={{ fontSize: 11.5, fontWeight: 600, color: 'oklch(45% 0.08 145)', whiteSpace: 'nowrap' }} role="status">✓<span className="nad-jnav-saved-label"> {T.common.saved}</span></span>}
       </div>
-      <Hoverable as="button" type="button" className="nad-jnav-next" disabled={!enabled} style={nextStyle} hoverStyle={nextHover} onClick={onNext}>{nextLabel || T.common.next}<span aria-hidden="true" style={{ display: 'inline-block', fontSize: 15, lineHeight: 1 }}>{arrow}</span></Hoverable>
+      <Hoverable as="button" type="button" className="nad-jnav-next" disabled={!enabled} style={nextStyle} hoverStyle={nextHover} onClick={onNext}>{nextLabel || T.common.next}</Hoverable>
     </div>
   );
 
