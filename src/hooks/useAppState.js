@@ -369,13 +369,28 @@ export function AppStateProvider({ children }) {
       patch({ guestFormError: state.lang === 'ar' ? STRINGS.ar.login.guestFormError : STRINGS.en.login.guestFormError });
       return;
     }
+    const T = state.lang === 'ar' ? STRINGS.ar : STRINGS.en;
+    // Duplicate check — an email/phone already in the system (esp. verified/
+    // accepted) must not be registered again; notify and send them to Log In.
+    const emailKey = email.toLowerCase();
+    const phoneKey = phone.replace(/\s+/g, '');
+    const existsLocally = state.adminRegistrations.some((r) =>
+      (emailKey && r.email && r.email.trim().toLowerCase() === emailKey) ||
+      (phoneKey && r.phone && r.phone.replace(/\s+/g, '') === phoneKey));
     let reg = { id: Date.now(), email, phone, registeredAt: new Date().toISOString().slice(0, 10), status: 'pending' };
     if (isSupabaseConfigured) {
       try {
         const res = await fetch('/api/admin-registrations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, phone }) });
         const data = await res.json();
+        if (data && data.alreadyRegistered) {
+          patch({ guestFormError: T.login.guestAlreadyRegistered, guestPanelMode: 'login', guestLoginIdentifier: email || phone });
+          return;
+        }
         if (data && data.success && data.registration) reg = data.registration;
       } catch (e) {}
+    } else if (existsLocally) {
+      patch({ guestFormError: T.login.guestAlreadyRegistered, guestPanelMode: 'login', guestLoginIdentifier: email || phone });
+      return;
     }
     setState((s) => {
       const nextRegs = [...s.adminRegistrations, reg];
@@ -400,7 +415,7 @@ export function AppStateProvider({ children }) {
         loginIntent: null, guestEmail: '', guestPhone: '', guestFormError: '',
       };
     });
-  }, [state.guestEmail, state.guestPhone, state.lang, state.loginIntent, patch, navigate, showToast]);
+  }, [state.guestEmail, state.guestPhone, state.lang, state.loginIntent, state.adminRegistrations, patch, navigate, showToast]);
 
   const loginAsAdmin = useCallback(async () => {
     const passcode = state.loginPasscode;

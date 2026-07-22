@@ -50,6 +50,7 @@ export const STRINGS = {
       guestLoginIdentifierLabel: 'Email or phone number', guestLoginIdentifierPlaceholder: 'you@example.com or +966 5x xxx xxxx',
       guestLoginBtn: 'Log In', guestLoginNotFound: 'We couldn\u2019t find an account with that email or phone. Try Sign Up instead.',
       guestWelcomeBack: 'Welcome back!',
+      guestAlreadyRegistered: 'This email or phone is already registered. Please use Log In instead.',
     },
     admin: {
       title: 'Admin Dashboard', sub: 'Manage suppliers, pricing and consultation requests. Visible only to logged-in administrators.',
@@ -136,6 +137,7 @@ export const STRINGS = {
       guestLoginIdentifierLabel: 'البريد الإلكتروني أو رقم الهاتف', guestLoginIdentifierPlaceholder: 'you@example.com أو +966 5x xxx xxxx',
       guestLoginBtn: 'تسجيل الدخول', guestLoginNotFound: 'لم نجد حساباً بهذا البريد أو الرقم. جرّب إنشاء حساب جديد بدلاً من ذلك.',
       guestWelcomeBack: 'مرحباً بعودتك!',
+      guestAlreadyRegistered: 'هذا البريد الإلكتروني أو رقم الهاتف مُسجّل بالفعل. الرجاء استخدام تسجيل الدخول بدلاً من ذلك.',
     },
     admin: {
       title: 'لوحة تحكم المدير', sub: 'إدارة الموردين والتسعير وطلبات الاستشارة. تظهر فقط لمديري النظام المسجلين.',

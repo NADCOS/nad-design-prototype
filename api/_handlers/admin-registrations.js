@@ -60,6 +60,19 @@ export default async function handler(req, res) {
     const cleanEmail = typeof email === 'string' ? email.trim() : '';
     const cleanPhone = typeof phone === 'string' ? phone.trim() : '';
     if (!cleanEmail && !cleanPhone) { res.status(400).json({ success: false, error: 'Email or phone is required.' }); return; }
+    // Dedupe: if this email/phone already exists, don't create another row —
+    // return the existing registration so the client can tell the visitor it's
+    // already in the system (and route them to Log In instead).
+    const emailKey = cleanEmail.toLowerCase();
+    const phoneKey = cleanPhone.replace(/\s+/g, '');
+    const { data: existingRows } = await supabaseAdmin.from('registrations').select('*').limit(2000);
+    const existing = (existingRows || []).find((r) =>
+      (emailKey && r.email && r.email.trim().toLowerCase() === emailKey) ||
+      (phoneKey && r.phone && r.phone.replace(/\s+/g, '') === phoneKey));
+    if (existing) {
+      res.status(200).json({ success: true, alreadyRegistered: true, registration: toClient(existing) });
+      return;
+    }
     const { data, error } = await supabaseAdmin.from('registrations').insert({ email: cleanEmail || null, phone: cleanPhone || null, status: 'pending' }).select().single();
     if (error) { res.status(500).json({ success: false, error: 'Could not save your registration.' }); return; }
     res.status(200).json({ success: true, registration: toClient(data) });
