@@ -41,7 +41,7 @@ export default function FunnelChart({ funnel, steps, lang }) {
               <div key={i} style={{ display: 'grid', gridTemplateColumns: '110px 1fr auto', gap: 12, alignItems: 'center' }}>
                 <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text)' }}>{(i + 1 < 10 ? '0' : '') + (i + 1) + ' ' + (steps[i] || '')}</span>
                 <div style={{ background: 'var(--bg)', borderRadius: 6, height: 26, position: 'relative', overflow: 'hidden' }}>
-                  <div style={{ width: w + '%', height: '100%', borderRadius: 6, background: 'linear-gradient(90deg, oklch(46% 0.09 60), oklch(64% 0.10 68))', transition: 'width .5s ease' }} />
+                  <div style={{ width: w + '%', height: '100%', borderRadius: 6, background: 'linear-gradient(90deg, #1B6045, #C4A05A)', transition: 'width .5s ease' }} />
                 </div>
                 <span style={{ fontSize: 12.5, color: 'var(--text-2)', whiteSpace: 'nowrap', minWidth: 96, textAlign: 'end' }}>
                   <strong style={{ color: 'var(--text)' }}>{count}</strong>
