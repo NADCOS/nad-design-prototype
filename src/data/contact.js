@@ -24,12 +24,9 @@ export const DEFAULT_CONTACT = {
 // FULL URL (admin pastes the profile link); an empty value hides that icon.
 export const SOCIAL_META = [
   { key: 'instagram', label: 'Instagram', placeholder: 'https://instagram.com/naddesign' },
-  { key: 'x', label: 'X (Twitter)', placeholder: 'https://x.com/naddesign' },
   { key: 'tiktok', label: 'TikTok', placeholder: 'https://tiktok.com/@naddesign' },
   { key: 'snapchat', label: 'Snapchat', placeholder: 'https://snapchat.com/add/naddesign' },
   { key: 'linkedin', label: 'LinkedIn', placeholder: 'https://linkedin.com/company/naddesign' },
-  { key: 'youtube', label: 'YouTube', placeholder: 'https://youtube.com/@naddesign' },
-  { key: 'facebook', label: 'Facebook', placeholder: 'https://facebook.com/naddesign' },
 ];
 
 // 24×24 icon path data (single <path>, currentColor fill) per platform.

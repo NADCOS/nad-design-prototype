@@ -22,8 +22,7 @@ export default function Header({ headFont }) {
   return (
     <header className="nad-header" style={{ position: 'sticky', top: 0, zIndex: 40, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, padding: '14px 28px', background: 'var(--nav-bg)', backdropFilter: 'blur(10px)', borderBottom: '1px solid var(--border)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => { setMenuOpen(false); navigate('/'); }} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && navigate('/')}>
-        <img src="/assets/nad-logo.jpg" alt="NAD Design logo" style={{ width: 40, height: 40, borderRadius: 0, objectFit: 'cover' }} />
-        <span className="nad-header-brand-text" style={{ fontFamily: headFont, fontSize: 19, letterSpacing: '0.04em', color: 'var(--text)' }}>{T.brand}</span>
+        <img src="/assets/sense-logo.svg" alt="Sense" style={{ height: 46, width: 'auto', objectFit: 'contain' }} />
       </div>
 
       <nav className="nad-nav-desktop" style={{ display: 'flex', alignItems: 'center', gap: 26, flexWrap: 'wrap' }} aria-label="Main navigation">
