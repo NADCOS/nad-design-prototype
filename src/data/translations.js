@@ -4,6 +4,7 @@ export const STRINGS = {
     brand: 'NAD Design',
     nav: { home: 'Home', contact: 'Contact', start: 'Start Your Design', langToggle: 'العربية', login: 'Login', adminPanel: 'Admin Panel', logout: 'Log out', adminBadge: 'Admin', guestBadge: 'Guest', darkMode: 'Dark Mode', lightMode: 'Light Mode' },
     contactPage: { kicker: 'Get in touch', title: "Let's design your space", sub: 'Reach the NAD Design team directly, or follow our latest work.', reach: 'Reach us', follow: 'Follow us', whatsappCta: 'Message us on WhatsApp', emailLabel: 'Email', phoneLabel: 'Phone', addressLabel: 'Studio', hoursLabel: 'Hours' },
+    home: {
       kicker: 'AI-Assisted Interior & Architectural Design',
       headline: 'Design Your Space with NAD Design AI',
       sub: 'Choose your project type, design level, materials, furniture, and style. Generate a realistic AI design and receive an initial project cost estimate.',
@@ -89,6 +90,7 @@ export const STRINGS = {
     brand: 'ناد ديزاين',
     nav: { home: 'الرئيسية', contact: 'تواصل معنا', start: 'ابدأ تصميمك', langToggle: 'English', login: 'تسجيل الدخول', adminPanel: 'لوحة التحكم', logout: 'تسجيل الخروج', adminBadge: 'مدير', guestBadge: 'زائر', darkMode: 'الوضع الداكن', lightMode: 'الوضع الفاتح' },
     contactPage: { kicker: 'تواصل معنا', title: 'لنصمّم مساحتك', sub: 'تواصل مع فريق ناد ديزاين مباشرةً أو تابع أحدث أعمالنا.', reach: 'تواصل معنا', follow: 'تابعنا', whatsappCta: 'راسلنا عبر واتساب', emailLabel: 'البريد الإلكتروني', phoneLabel: 'الهاتف', addressLabel: 'الاستوديو', hoursLabel: 'ساعات العمل' },
+    home: {
       kicker: 'تصميم داخلي ومعماري بمساعدة الذكاء الاصطناعي',
       headline: 'صمّم مساحتك مع ناد ديزاين AI',
       sub: 'اختر نوع مشروعك، مستوى التصميم، الخامات، الأثاث، والنمط. احصل على تصميم واقعي بالذكاء الاصطناعي وتقدير مبدئي لتكلفة المشروع.',
