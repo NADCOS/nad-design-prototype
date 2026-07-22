@@ -4,7 +4,7 @@ import React from 'react';
 // the logo softly breathing, and a sweeping progress line beneath it.
 export default function BrandLoader({ title, subtitle }) {
   return (
-    <div role="status" aria-live="polite" style={{ aspectRatio: '4/3', borderRadius: 16, background: '#000', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, overflow: 'hidden', padding: 24 }}>
+    <div role="status" aria-live="polite" style={{ aspectRatio: '4/3', borderRadius: 16, background: '#1B6045', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, overflow: 'hidden', padding: 24 }}>
       <img src="/assets/sense-logo-light.png" alt="Sense" style={{ width: '46%', maxWidth: 260, animation: 'nad-logo-pulse 2.2s ease-in-out infinite' }} />
       <div style={{ width: 160, height: 2, background: 'rgba(255,255,255,0.18)', borderRadius: 100, overflow: 'hidden' }} aria-hidden="true">
         <div style={{ width: '40%', height: '100%', background: '#fff', borderRadius: 100, animation: 'nad-loader-sweep 1.4s ease-in-out infinite' }} />
