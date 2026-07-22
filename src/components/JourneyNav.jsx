@@ -104,7 +104,7 @@ export default function JourneyNav({ backTo, onNext, nextDisabled, nextLabel }) 
       </Hoverable>
 
       {previewOpen && (
-        <div className="nad-mood-pop nad-preview-glass" style={{ position: 'absolute', bottom: 'calc(100% + 14px)', insetInlineStart: 0, width: 300, maxWidth: '86vw', background: 'var(--glass-bg)', backdropFilter: 'blur(22px) saturate(1.6)', WebkitBackdropFilter: 'blur(22px) saturate(1.6)', border: '1px solid var(--glass-border)', borderRadius: 18, boxShadow: '0 24px 60px -22px rgba(40, 34, 24, 0.5), inset 0 1px 0 rgba(255,255,255,0.4)', padding: 16, zIndex: 200 }}>
+        <div className="nad-mood-pop nad-preview-glass" style={{ position: 'absolute', bottom: 'calc(100% + 14px)', insetInlineStart: 0, width: 300, maxWidth: '86vw', background: 'var(--glass-bg, #ffffff)', backdropFilter: 'blur(22px) saturate(1.6)', WebkitBackdropFilter: 'blur(22px) saturate(1.6)', border: '1px solid var(--glass-border)', borderRadius: 18, boxShadow: '0 24px 60px -22px rgba(40, 34, 24, 0.5), inset 0 1px 0 rgba(255,255,255,0.4)', padding: 16, zIndex: 200 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>{previewLabel}</div>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)' }}>{chosenLabel}</div>
