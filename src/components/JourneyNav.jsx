@@ -22,8 +22,8 @@ export default function JourneyNav({ backTo, onNext, nextDisabled, nextLabel }) 
   const nextStyle = {
     minHeight: 48, display: 'inline-flex', alignItems: 'center', gap: 9,
     fontSize: 14.5, fontWeight: 650, letterSpacing: '.01em',
-    color: enabled ? 'var(--btn-text)' : 'var(--muted)',
-    background: enabled ? 'linear-gradient(180deg, color-mix(in oklch, var(--btn-bg) 88%, white), var(--btn-bg))' : 'var(--border)',
+    color: enabled ? accentText : 'var(--muted)',
+    background: enabled ? 'linear-gradient(180deg, color-mix(in oklch, ' + accent + ' 86%, white), ' + accent + ')' : 'var(--border)',
     border: 'none', padding: '14px 30px', borderRadius: 100,
     cursor: enabled ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap',
     boxShadow: enabled ? 'inset 0 1px 0 oklch(100% 0 0 / 0.18), 0 6px 16px -8px oklch(20% 0.02 50 / 0.45)' : 'none',
@@ -31,6 +31,8 @@ export default function JourneyNav({ backTo, onNext, nextDisabled, nextLabel }) 
   };
   const nextHover = enabled ? { transform: 'translateY(-2px)', boxShadow: 'inset 0 1px 0 oklch(100% 0 0 / 0.22), 0 12px 26px -8px oklch(20% 0.02 50 / 0.5)', filter: 'brightness(1.06)' } : {};
   const arrow = lang === 'ar' ? '\u2190' : '\u2192';
+  const accent = state.theme === 'dark' ? '#C4A05A' : '#1B6045';
+  const accentText = state.theme === 'dark' ? '#2a2013' : '#ffffff';
 
   // ---- Live design preview data ---------------------------------------
   const sel = state.selections;
