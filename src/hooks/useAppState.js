@@ -1,4 +1,4 @@
-// NAD Design — global app state & all handlers, ported from the original
+// Sense Design — global app state & all handlers, ported from the original
 // single-file App.jsx class component into a React Context + hook so pages
 // can be split into separate files while sharing one source of truth.
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
@@ -365,8 +365,8 @@ export function AppStateProvider({ children }) {
       try { localStorage.setItem('nad_guest_identifier', email || phone || ''); } catch (e) {}
       const idx = STEP_KEYS.indexOf(s.loginIntent);
       try {
-        const subject = encodeURIComponent('New NAD Design registration to verify');
-        const body = encodeURIComponent('A new visitor registered on NAD Design and needs verification.\n\nEmail: ' + (email || '\u2014') + '\nPhone: ' + (phone || '\u2014') + '\nDate: ' + reg.registeredAt);
+        const subject = encodeURIComponent('New Sense Design registration to verify');
+        const body = encodeURIComponent('A new visitor registered on Sense Design and needs verification.\n\nEmail: ' + (email || '\u2014') + '\nPhone: ' + (phone || '\u2014') + '\nDate: ' + reg.registeredAt);
         const mailtoLink = document.createElement('a');
         mailtoLink.href = 'mailto:admin@nadcos.com?subject=' + subject + '&body=' + body;
         mailtoLink.click();
@@ -903,13 +903,13 @@ export function AppStateProvider({ children }) {
     const win = window.open('', '_blank');
     if (!win) return;
     const dir = lang === 'ar' ? 'rtl' : 'ltr';
-    win.document.write('<!doctype html><html dir="' + dir + '"><head><meta charset="utf-8"><title>NAD Design — ' + T.summary.costBreakdown + '</title>'
+    win.document.write('<!doctype html><html dir="' + dir + '"><head><meta charset="utf-8"><title>Sense Design — ' + T.summary.costBreakdown + '</title>'
       + '<style>body{font-family:Georgia,serif;padding:48px;color:#241a0e;}h1{font-size:22px;margin:0 0 4px;}.sub{font-size:12px;color:#6b5c46;margin-bottom:28px;}'
       + 'table{width:100%;border-collapse:collapse;font-size:14px;}td{padding:10px 0;border-bottom:1px solid #e4d9c4;}'
       + 'td:last-child{text-align:' + (lang === 'ar' ? 'left' : 'right') + ';font-weight:600;}'
       + 'tr.total td{font-size:17px;font-weight:700;border-top:2px solid #241a0e;border-bottom:none;padding-top:16px;}'
       + '.disc{font-size:11px;color:#8a7a5f;margin-top:24px;line-height:1.6;}</style></head><body>'
-      + '<h1>NAD Design</h1><div class="sub">' + T.summary.costBreakdown + ' — ' + new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US') + '</div>'
+      + '<h1>Sense Design</h1><div class="sub">' + T.summary.costBreakdown + ' — ' + new Date().toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US') + '</div>'
       + '<table>' + rows.map((r) => '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>').join('') + '<tr class="total"><td>' + T.summary.total + '</td><td>' + fmtSar(cost.total, lang) + '</td></tr></table>'
       + '<div class="disc">' + T.summary.disclaimer + '</div></body></html>');
     win.document.close();
@@ -922,7 +922,7 @@ export function AppStateProvider({ children }) {
     const ctx = canvas.getContext('2d');
     for (let y = 0; y < 800; y += 24) { ctx.fillStyle = (y / 24) % 2 === 0 ? '#e9e0d2' : '#d8c9ab'; ctx.fillRect(0, y, 1200, 24); }
     ctx.fillStyle = 'rgba(26,20,14,0.85)'; ctx.fillRect(0, 700, 1200, 100);
-    ctx.fillStyle = '#f7f3ea'; ctx.font = '600 30px Georgia, serif'; ctx.fillText('NAD Design — Conceptual Visualization', 30, 745);
+    ctx.fillStyle = '#f7f3ea'; ctx.font = '600 30px Georgia, serif'; ctx.fillText('Sense Design — Conceptual Visualization', 30, 745);
     ctx.font = '15px monospace'; ctx.fillText('Prototype output · not a final rendered image', 30, 775);
     const a = document.createElement('a'); a.download = 'nad-design-concept.jpg'; a.href = canvas.toDataURL('image/jpeg'); a.click();
   }, []);
@@ -949,7 +949,7 @@ export function AppStateProvider({ children }) {
   const buildWhatsAppLink = useCallback(() => {
     const s = state.selections; const lang = state.lang;
     const lines = [
-      'NAD Design — ' + (lang === 'ar' ? 'ملخص المشروع' : 'Project Summary'),
+      'Sense Design — ' + (lang === 'ar' ? 'ملخص المشروع' : 'Project Summary'),
       (lang === 'ar' ? 'نوع المشروع' : 'Project type') + ': ' + (s.projectType ? s.projectType[lang] : '-'),
       (lang === 'ar' ? 'المستوى' : 'Level') + ': ' + (s.designLevel ? s.designLevel[lang] : '-'),
       (lang === 'ar' ? 'النمط' : 'Style') + ': ' + (s.stylePrimary ? s.stylePrimary[lang] : '-'),
