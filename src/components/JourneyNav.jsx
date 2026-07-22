@@ -19,6 +19,8 @@ export default function JourneyNav({ backTo, onNext, nextDisabled, nextLabel }) 
   const enabled = !nextDisabled;
   const cost = state.selections.designLevel ? computeCost() : null;
   const showSaved = state.role === 'guest' && !!state.lastSavedAt;
+  const accent = state.theme === 'dark' ? '#C4A05A' : '#1B6045';
+  const accentText = state.theme === 'dark' ? '#2a2013' : '#ffffff';
   const nextStyle = {
     minHeight: 48, display: 'inline-flex', alignItems: 'center', gap: 9,
     fontSize: 14.5, fontWeight: 650, letterSpacing: '.01em',
@@ -31,8 +33,6 @@ export default function JourneyNav({ backTo, onNext, nextDisabled, nextLabel }) 
   };
   const nextHover = enabled ? { transform: 'translateY(-2px)', boxShadow: 'inset 0 1px 0 oklch(100% 0 0 / 0.22), 0 12px 26px -8px oklch(20% 0.02 50 / 0.5)', filter: 'brightness(1.06)' } : {};
   const arrow = lang === 'ar' ? '\u2190' : '\u2192';
-  const accent = state.theme === 'dark' ? '#C4A05A' : '#1B6045';
-  const accentText = state.theme === 'dark' ? '#2a2013' : '#ffffff';
 
   // ---- Live design preview data ---------------------------------------
   const sel = state.selections;
