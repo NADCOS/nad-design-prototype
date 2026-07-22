@@ -23,7 +23,7 @@ export default function ComparisonViewer({ beforeImageUrl, afterImageUrl, before
   const onTouchMove = useCallback((e) => { if (e.touches && e.touches[0]) setFromClientX(e.touches[0].clientX); }, [setFromClientX]);
 
   return (
-    <div>
+    <div data-allow-download>
       <div
         ref={frameRef}
         onMouseDown={onMouseDown}
