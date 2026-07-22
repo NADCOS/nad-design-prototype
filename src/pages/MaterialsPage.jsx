@@ -22,6 +22,7 @@ export default function MaterialsPage() {
   const previewItem = hoverItem || chosenForCat;
   const previewSlotId = previewItem ? materialSlotId(activeCat.key, previewItem.en || previewItem[0]) : null;
   const previewSrc = previewSlotId ? (state.imageOverrides[previewSlotId] || PREFILL_MATERIAL_IMAGES[previewSlotId.slice(4)] || '') : '';
+  const previewPrefill = previewSlotId ? (PREFILL_MATERIAL_IMAGES[previewSlotId.slice(4)] || '') : '';
 
   function selectTab(key) { setTab(key); setMaterialTab(key); setHoverItem(null); }
 
@@ -60,7 +61,7 @@ export default function MaterialsPage() {
         <div className="nad-mat-preview" style={{ position: 'sticky', top: 90, borderRadius: 16, overflow: 'hidden', background: 'var(--surface)', border: '1px solid var(--border)' }}>
           <div style={{ aspectRatio: '4/3', position: 'relative', background: 'oklch(90% 0.02 75)' }}>
             {previewSrc && (
-              <img src={previewSrc} alt={previewItem ? previewItem[lang === 'ar' ? 1 : 0] || previewItem.en : ''} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={previewSrc} alt={previewItem ? previewItem[lang === 'ar' ? 1 : 0] || previewItem.en : ''} onError={(e) => { if (previewPrefill && e.currentTarget.src !== previewPrefill) e.currentTarget.src = previewPrefill; }} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
             )}
             {previewItem && (
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '14px 16px', background: 'linear-gradient(to top, rgba(0,0,0,0.55), transparent)' }}>

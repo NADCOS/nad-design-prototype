@@ -280,25 +280,44 @@ export function AppStateProvider({ children }) {
     return { ...s, theme: next };
   }), []);
 
-  const handleAdminImageChange = useCallback((slotId, e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setState((s) => {
-      const next = { ...s.imageOverrides, [slotId]: ev.target.result };
-      try { localStorage.setItem('nad_image_overrides', JSON.stringify(next)); } catch (err) {}
-      return { ...s, imageOverrides: next };
-    });
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  }, []);
-
   const showToast = useCallback((msg) => {
     patch({ toast: msg });
     if (toastTimer.current) clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setState((s) => (s.toast === msg ? { ...s, toast: null } : s)), 2600);
   }, [patch]);
 
+  const handleAdminImageChange = useCallback((slotId, e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    e.target.value = '';
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      // Compress before storing: raw phone photos are 2–8MB of base64 and blow
+      // past the ~5MB localStorage cap, so setItem throws, the write is dropped,
+      // and on reload the slot reverts to the previously-saved image. A resized
+      // JPEG is ~100–300KB, so the exact upload persists and stays the preview.
+      let dataUrl = ev.target.result;
+      try { dataUrl = await urlToResizedJpegDataUrl(dataUrl, 1280, 0.82); } catch (err) {}
+      setState((s) => {
+        const next = { ...s.imageOverrides, [slotId]: dataUrl };
+        try {
+          localStorage.setItem('nad_image_overrides', JSON.stringify(next));
+        } catch (err) {
+          // Still over quota — keep this image, drop older overrides to make room.
+          const trimmed = { [slotId]: dataUrl };
+          try {
+            localStorage.setItem('nad_image_overrides', JSON.stringify(trimmed));
+            showToast(s.lang === 'ar' ? 'تم حفظ الصورة (تم مسح الصور السابقة لتوفير مساحة)' : 'Image saved — older uploads were cleared to free space');
+            return { ...s, imageOverrides: trimmed };
+          } catch (err2) {
+            showToast(s.lang === 'ar' ? 'الصورة كبيرة جداً للحفظ' : 'Image too large to save — try a smaller file');
+          }
+        }
+        return { ...s, imageOverrides: next };
+      });
+    };
+    reader.readAsDataURL(file);
+  }, [showToast]);
   const goToLogin = useCallback((intent) => { patch({ loginError: '', loginPasscode: '', guestFormError: '', loginIntent: intent || null }); navigate('/login'); }, [patch, navigate]);
   const setLoginPasscode = useCallback((e) => patch({ loginPasscode: e.target.value, loginError: '' }), [patch]);
   const setGuestEmail = useCallback((e) => patch({ guestEmail: e.target.value, guestFormError: '' }), [patch]);
