@@ -2,8 +2,8 @@
 export const STRINGS = {
   en: {
     brand: 'NAD Design',
-    nav: { home: 'Home', start: 'Start Your Design', langToggle: 'العربية', login: 'Login', adminPanel: 'Admin Panel', logout: 'Log out', adminBadge: 'Admin', guestBadge: 'Guest', darkMode: 'Dark Mode', lightMode: 'Light Mode' },
-    home: {
+    nav: { home: 'Home', contact: 'Contact', start: 'Start Your Design', langToggle: 'العربية', login: 'Login', adminPanel: 'Admin Panel', logout: 'Log out', adminBadge: 'Admin', guestBadge: 'Guest', darkMode: 'Dark Mode', lightMode: 'Light Mode' },
+    contactPage: { kicker: 'Get in touch', title: "Let's design your space", sub: 'Reach the NAD Design team directly, or follow our latest work.', reach: 'Reach us', follow: 'Follow us', whatsappCta: 'Message us on WhatsApp', emailLabel: 'Email', phoneLabel: 'Phone', addressLabel: 'Studio', hoursLabel: 'Hours' },
       kicker: 'AI-Assisted Interior & Architectural Design',
       headline: 'Design Your Space with NAD Design AI',
       sub: 'Choose your project type, design level, materials, furniture, and style. Generate a realistic AI design and receive an initial project cost estimate.',
@@ -52,7 +52,8 @@ export const STRINGS = {
     },
     admin: {
       title: 'Admin Dashboard', sub: 'Manage suppliers, pricing and consultation requests. Visible only to logged-in administrators.',
-      tabs: { overview: 'Overview', leads: 'Leads', suppliers: 'Suppliers', pricing: 'Design-Level Pricing', consultations: 'Consultation Requests', clients: 'Clients', registrations: 'Registrations', chats: 'Chats' },
+      tabs: { overview: 'Overview', leads: 'Leads', suppliers: 'Suppliers', pricing: 'Design-Level Pricing', consultations: 'Consultation Requests', clients: 'Clients', registrations: 'Registrations', chats: 'Chats', contact: 'Contact & Social' },
+      contact: { note: 'These details appear on the public Contact page. Changes save automatically and are live for everyone.', details: 'Contact details', email: 'Email', phone: 'Phone', whatsapp: 'WhatsApp number', address: 'Address', hours: 'Working hours', socials: 'Social links', socialHint: 'Paste the full profile URL. Leave blank to hide that icon.' },
       overview: { suppliers: 'Approved Suppliers', consultations: 'Open Consultation Requests', clients: 'Registered Clients', projects: 'Active Journeys Today', pendingRegistrations: 'Pending Verifications' },
       suppliers: { name: 'Supplier', category: 'Category', delivery: 'Delivery period', contact: 'Contact', status: 'Status', approved: 'Approved', hidden: 'Hidden', hide: 'Hide', show: 'Show', remove: 'Remove', addPlaceholder: 'New supplier name…', add: 'Add supplier', websitePlaceholder: 'Website (https://…)', emailPlaceholder: 'Email address…', phonePlaceholder: 'Phone number…', linkLabel: 'Link to supplier', emailLabel: 'Email', callLabel: 'Call' },
       pricing: { level: 'Design level', min: 'Min SAR / m²', max: 'Max SAR / m²', note: 'Updates the price range clients see across the site in real time.' },
@@ -86,8 +87,8 @@ export const STRINGS = {
   },
   ar: {
     brand: 'ناد ديزاين',
-    nav: { home: 'الرئيسية', start: 'ابدأ تصميمك', langToggle: 'English', login: 'تسجيل الدخول', adminPanel: 'لوحة التحكم', logout: 'تسجيل الخروج', adminBadge: 'مدير', guestBadge: 'زائر', darkMode: 'الوضع الداكن', lightMode: 'الوضع الفاتح' },
-    home: {
+    nav: { home: 'الرئيسية', contact: 'تواصل معنا', start: 'ابدأ تصميمك', langToggle: 'English', login: 'تسجيل الدخول', adminPanel: 'لوحة التحكم', logout: 'تسجيل الخروج', adminBadge: 'مدير', guestBadge: 'زائر', darkMode: 'الوضع الداكن', lightMode: 'الوضع الفاتح' },
+    contactPage: { kicker: 'تواصل معنا', title: 'لنصمّم مساحتك', sub: 'تواصل مع فريق ناد ديزاين مباشرةً أو تابع أحدث أعمالنا.', reach: 'تواصل معنا', follow: 'تابعنا', whatsappCta: 'راسلنا عبر واتساب', emailLabel: 'البريد الإلكتروني', phoneLabel: 'الهاتف', addressLabel: 'الاستوديو', hoursLabel: 'ساعات العمل' },
       kicker: 'تصميم داخلي ومعماري بمساعدة الذكاء الاصطناعي',
       headline: 'صمّم مساحتك مع ناد ديزاين AI',
       sub: 'اختر نوع مشروعك، مستوى التصميم، الخامات، الأثاث، والنمط. احصل على تصميم واقعي بالذكاء الاصطناعي وتقدير مبدئي لتكلفة المشروع.',
@@ -136,7 +137,8 @@ export const STRINGS = {
     },
     admin: {
       title: 'لوحة تحكم المدير', sub: 'إدارة الموردين والتسعير وطلبات الاستشارة. تظهر فقط لمديري النظام المسجلين.',
-      tabs: { overview: 'نظرة عامة', leads: 'العملاء المحتملون', suppliers: 'الموردون', pricing: 'تسعير مستويات التصميم', consultations: 'طلبات الاستشارة', clients: 'العملاء', registrations: 'التسجيلات', chats: 'المحادثات' },
+      tabs: { overview: 'نظرة عامة', leads: 'العملاء المحتملون', suppliers: 'الموردون', pricing: 'تسعير مستويات التصميم', consultations: 'طلبات الاستشارة', clients: 'العملاء', registrations: 'التسجيلات', chats: 'المحادثات', contact: 'التواصل والتواصل الاجتماعي' },
+      contact: { note: 'تظهر هذه التفاصيل في صفحة التواصل العامة. تُحفظ التغييرات تلقائياً وتظهر للجميع.', details: 'بيانات التواصل', email: 'البريد الإلكتروني', phone: 'الهاتف', whatsapp: 'رقم واتساب', address: 'العنوان', hours: 'ساعات العمل', socials: 'روابط التواصل الاجتماعي', socialHint: 'الصق رابط الملف الكامل. اتركه فارغاً لإخفاء الأيقونة.' },
       overview: { suppliers: 'موردون معتمدون', consultations: 'طلبات استشارة مفتوحة', clients: 'عملاء مسجّلون', projects: 'رحلات نشطة اليوم', pendingRegistrations: 'بانتظار التحقق' },
       suppliers: { name: 'المورّد', category: 'الفئة', delivery: 'مدة التوريد', contact: 'التواصل', status: 'الحالة', approved: 'معتمد', hidden: 'مخفي', websitePlaceholder: 'الموقع الإلكتروني (https://…)', emailPlaceholder: 'البريد الإلكتروني…', phonePlaceholder: 'رقم الهاتف…', linkLabel: 'رابط المورّد', emailLabel: 'بريد', callLabel: 'اتصال', hide: 'إخفاء', show: 'إظهار', remove: 'إزالة', addPlaceholder: 'اسم مورّد جديد…', add: 'إضافة مورّد' },
       pricing: { level: 'مستوى التصميم', min: 'الحد الأدنى (ريال/م²)', max: 'الحد الأقصى (ريال/م²)', note: 'يحدّث نطاق السعر الذي يراه العملاء في الموقع فوراً.' },

@@ -12,8 +12,8 @@
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { requireAdmin } from '../_lib/verifyAdmin.js';
 
-const KNOWN_KEYS = ['pricing', 'clients', 'consultations'];
-const PUBLIC_KEYS = ['pricing']; // pricing affects what guests see site-wide
+const KNOWN_KEYS = ['pricing', 'clients', 'consultations', 'contact'];
+const PUBLIC_KEYS = ['pricing', 'contact']; // pricing + contact affect what guests see site-wide
 
 export default async function handler(req, res) {
   const supabaseAdmin = getSupabaseAdmin();

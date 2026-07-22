@@ -4,6 +4,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SUPPLIERS } from '../data/suppliers.js';
+import { DEFAULT_CONTACT } from '../data/contact.js';
 import { DESIGN_LEVELS } from '../data/designLevels.js';
 import { FURNITURE_ITEMS } from '../data/furniture.js';
 import { STEP_KEYS } from '../data/navigation.js';
@@ -70,6 +71,7 @@ export function AppStateProvider({ children }) {
     toast: null,
     imageOverrides: {},
     theme: 'light',
+    contactInfo: DEFAULT_CONTACT,
     role: null,
     loginPasscode: '',
     loginError: '',
@@ -229,6 +231,7 @@ export function AppStateProvider({ children }) {
         pricing: { priceOverrides: s.priceOverrides },
         clients: { clients: s.adminClients },
         consultations: { consultations: s.adminConsultations },
+        contact: { contact: s.contactInfo },
       };
       for (const key of keys) {
         const data = payloadByKey[key];
@@ -250,18 +253,19 @@ export function AppStateProvider({ children }) {
       priceOverrides: (bag.pricing && bag.pricing.priceOverrides) || s.priceOverrides,
       adminClients: (bag.clients && bag.clients.clients) || s.adminClients,
       adminConsultations: (bag.consultations && bag.consultations.consultations) || s.adminConsultations,
+      contactInfo: (bag.contact && bag.contact.contact) || s.contactInfo,
     }));
     if (isSupabaseConfigured) {
       try {
         const headers = isAdminView ? await getAdminAuthHeaders() : {};
-        const res = await fetch('/api/admin-site-data' + (isAdminView ? '' : '?keys=pricing'), { headers });
+        const res = await fetch('/api/admin-site-data' + (isAdminView ? '' : '?keys=pricing,contact'), { headers });
         const d = await res.json();
         if (d && d.success && d.data) apply(d.data);
       } catch (e) {}
     } else {
       try {
         const bag = {};
-        ['pricing', 'clients', 'consultations'].forEach((k) => {
+        ['pricing', 'clients', 'consultations', 'contact'].forEach((k) => {
           const v = JSON.parse(localStorage.getItem('nad_site_data::' + k) || 'null');
           if (v) bag[k] = v;
         });
@@ -511,6 +515,18 @@ export function AppStateProvider({ children }) {
     const num = parseFloat(e.target.value);
     patch((s) => ({ priceOverrides: { ...s.priceOverrides, [key]: { ...s.priceOverrides[key], [field]: isNaN(num) ? undefined : num } } }));
     persistSiteData(['pricing']);
+  }, [patch, persistSiteData]);
+
+  // Contact / social links — site-wide, admin-editable (Admin → Contact).
+  const updateContactField = useCallback((path, value) => {
+    patch((s) => {
+      if (path.startsWith('socials.')) {
+        const key = path.slice('socials.'.length);
+        return { contactInfo: { ...s.contactInfo, socials: { ...s.contactInfo.socials, [key]: value } } };
+      }
+      return { contactInfo: { ...s.contactInfo, [path]: value } };
+    });
+    persistSiteData(['contact']);
   }, [patch, persistSiteData]);
 
   const setNewSupplierName = useCallback((e) => patch({ newSupplierName: e.target.value }), [patch]);
@@ -1125,6 +1141,7 @@ export function AppStateProvider({ children }) {
     goToAdmin, setAdminTab, setRegistrationStatus, toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, resetGuestGenerations, loadActivityStats, loadRegistrations, loadSuppliers, loadGuestProjects, loadSiteData,
     saveGuestProject, resumeSavedProject, dismissResume,
     getLevelRangeFor, setPriceOverride,
+    updateContactField,
     setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone, addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,
     setConsultationStatus, removeConsultation, removeClient,
     goHome, goToStart, goToLevels, toggleLang, goToStep, advanceTo,

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppState } from '../hooks/useAppState.js';
 import { STRINGS } from '../data/translations.js';
 import { DESIGN_LEVELS } from '../data/designLevels.js';
+import { SOCIAL_META } from '../data/contact.js';
 import { sx } from '../utils/sx.js';
 import ActivityChart from '../components/ActivityChart.jsx';
 import FunnelChart from '../components/FunnelChart.jsx';
@@ -14,7 +15,7 @@ export default function AdminPage() {
   const {
     state, setAdminTab, setNewSupplierName, setNewSupplierWebsite, setNewSupplierEmail, setNewSupplierPhone,
     addSupplier, toggleSupplierStatus, removeSupplier, updateSupplierField,
-    getLevelRangeFor, setPriceOverride, setConsultationStatus, removeConsultation, removeClient, setRegistrationStatus,
+    getLevelRangeFor, setPriceOverride, setConsultationStatus, removeConsultation, removeClient, setRegistrationStatus, updateContactField,
     toggleRegistrationSuspended, removeDuplicateRegistrations, loadGenerationCounts, resetGuestGenerations, loadActivityStats, loadRegistrations, loadSuppliers, loadGuestProjects, loadSiteData,
   } = useAppState();
   const T = STRINGS[state.lang];
@@ -29,7 +30,7 @@ export default function AdminPage() {
   useEffect(() => { if (isAdmin) loadSiteData(true); }, [isAdmin, loadSiteData]);
   if (!isAdmin) return null;
 
-  const tabs = ['overview', 'leads', 'suppliers', 'pricing', 'consultations', 'clients', 'registrations'];
+  const tabs = ['overview', 'leads', 'suppliers', 'pricing', 'consultations', 'clients', 'registrations', 'contact'];
   const registrationsSorted = [...state.adminRegistrations].reverse();
 
   const projectByIdentifier = new Map();
@@ -248,6 +249,48 @@ export default function AdminPage() {
           </div>
         </>
       )}
+
+      {state.adminTab === 'contact' && (() => {
+        const C = state.contactInfo || {};
+        const TC = T.admin.contact;
+        const fieldWrap = { display: 'flex', flexDirection: 'column', gap: 6 };
+        const fieldLabel = { fontSize: 12, fontWeight: 700, color: 'var(--text-2)' };
+        const detailFields = [
+          { key: 'email', label: TC.email, value: C.email },
+          { key: 'phone', label: TC.phone, value: C.phone },
+          { key: 'whatsapp', label: TC.whatsapp, value: C.whatsapp },
+          { key: 'address', label: TC.address, value: C.address },
+          { key: 'hours', label: TC.hours, value: C.hours },
+        ];
+        return (
+          <>
+            <div style={{ fontSize: 12.5, color: 'var(--text-2)', marginBottom: 20 }}>{TC.note}</div>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 24, marginBottom: 20 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 16 }}>{TC.details}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+                {detailFields.map((f) => (
+                  <label key={f.key} style={fieldWrap}>
+                    <span style={fieldLabel}>{f.label}</span>
+                    <input value={f.value || ''} onChange={(e) => updateContactField(f.key, e.target.value)} style={sx(inputSm)} aria-label={f.label} />
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 24 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{TC.socials}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 16 }}>{TC.socialHint}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+                {SOCIAL_META.map((m) => (
+                  <label key={m.key} style={fieldWrap}>
+                    <span style={fieldLabel}>{m.label}</span>
+                    <input value={(C.socials && C.socials[m.key]) || ''} onChange={(e) => updateContactField('socials.' + m.key, e.target.value)} placeholder={m.placeholder} style={sx(inputSm)} aria-label={m.label} />
+                  </label>
+                ))}
+              </div>
+            </div>
+          </>
+        );
+      })()}
 
     </main>
   );

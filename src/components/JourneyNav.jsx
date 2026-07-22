@@ -153,7 +153,7 @@ export default function JourneyNav({ backTo, onNext, nextDisabled, nextLabel }) 
   );
 
   const bar = (
-    <div className="nad-journey-nav" style={{ position: 'relative' }}>{/* phone: compact single row via .nad-jnav-* rules */}
+    <div className="nad-journey-nav" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 90 }}>{/* phone: compact single row via .nad-jnav-* rules */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
         {previewThumb}
         {backTo ? (

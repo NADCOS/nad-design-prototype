@@ -28,6 +28,7 @@ export default function Header({ headFont }) {
 
       <nav className="nad-nav-desktop" style={{ display: 'flex', alignItems: 'center', gap: 26, flexWrap: 'wrap' }} aria-label="Main navigation">
         <span style={{ fontSize: 14, color: 'var(--text-2)', cursor: 'pointer' }} onClick={() => navigate('/')} role="link" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && navigate('/')}>{T.nav.home}</span>
+        <span style={{ fontSize: 14, color: 'var(--text-2)', cursor: 'pointer' }} onClick={() => navigate('/contact')} role="link" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && navigate('/contact')}>{T.nav.contact}</span>
         <Hoverable as="button" type="button" style="font-size:13.5px;font-weight:600;color:var(--btn-text);background:var(--btn-bg);border:none;padding:10px 20px;border-radius:100px;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;" hoverStyle="transform:translateY(-2px);box-shadow:0 10px 22px -8px oklch(20% 0.02 50 / 0.4);filter:brightness(1.08);" onClick={goToStart}>{T.nav.start}</Hoverable>
         {isAdmin ? <span style={{ fontSize: 14, color: 'var(--text-2)', cursor: 'pointer' }} onClick={goToAdmin} role="link" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && goToAdmin()}>{T.nav.adminPanel}</span> : null}
         {isLoggedIn ? (
@@ -60,6 +61,7 @@ export default function Header({ headFont }) {
             </div>
           )}
           <button type="button" role="menuitem" style={menuItemStyle} onClick={closeAnd(() => navigate('/'))}>{T.nav.home}</button>
+          <button type="button" role="menuitem" style={menuItemStyle} onClick={closeAnd(() => navigate('/contact'))}>{T.nav.contact}</button>
           {isAdmin && <button type="button" role="menuitem" style={menuItemStyle} onClick={closeAnd(goToAdmin)}>{T.nav.adminPanel}</button>}
           {isLoggedIn
             ? <button type="button" role="menuitem" style={menuItemStyle} onClick={closeAnd(logout)}>{T.nav.logout}</button>
